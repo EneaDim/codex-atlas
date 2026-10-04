@@ -51,7 +51,7 @@ button { cursor: pointer; }
 .round-button { width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(255,255,255,.72); backdrop-filter: blur(18px); font-weight: 700; }
 #search-toggle { font-size: 20px; line-height: 1; }
 .canvas-wrap { position: absolute; inset: 0; z-index: 2; overflow: hidden; }
-#codex-map { width: 100%; height: 100%; user-select: none; touch-action: none; cursor: grab; }
+#codex-map { width: 100%; height: 100%; user-select: none; -webkit-user-select: none; touch-action: none; overscroll-behavior: none; cursor: grab; }
 #codex-map:active { cursor: grabbing; }
 .outer-guide { fill: none; stroke: rgba(38,40,43,.16); stroke-width: .8; vector-effect: non-scaling-stroke; }
 .node-group { --domain-color: #777; color: var(--domain-color); cursor: pointer; outline: none; transition: opacity .17s ease; }
