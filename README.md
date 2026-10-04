@@ -121,3 +121,8 @@ CODEX_PACK=home npm run dev
 ```
 
 The Home pack also supports curated practical resources, difficulty/risk badges and professional-safety boundaries in the shared renderer.
+
+## Documentation
+
+- [`docs/PROJECT.md`](docs/PROJECT.md) — short project overview and normal development flow.
+- [`docs/RAILWAY_CLI.md`](docs/RAILWAY_CLI.md) — detailed Railway CLI setup, domains, variables, deployment and troubleshooting.
