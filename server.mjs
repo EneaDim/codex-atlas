@@ -6,7 +6,7 @@ import { gzipSync } from 'node:zlib';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const port = Number(process.env.PORT || 4173);
-const allowedPacks = new Set(['human-body', 'finance']);
+const allowedPacks = new Set(['human-body', 'finance', 'home']);
 const configuredPack = process.env.CODEX_PACK || 'human-body';
 const codexPack = allowedPacks.has(configuredPack) ? configuredPack : 'human-body';
 const types = {

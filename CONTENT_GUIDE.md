@@ -23,3 +23,20 @@ For a new Codex, keep the renderer and replace the data pack. A concept only nee
 ```
 
 Wikipedia abstracts are loaded live on hover, so you do not need to duplicate encyclopedia prose in the repository.
+
+
+## Practical resource metadata
+
+Packs may add `difficulty`, `risk`, and `resources` to systems or concepts. Concepts inherit missing values and resources from their parent system/domain.
+
+```js
+{
+  difficulty: 'easy', // easy | moderate | pro
+  risk: 'low',        // low | medium | high
+  resources: [
+    { type: 'tutorial', title: { en: '...', it: '...' }, url: 'https://...', source: '...' }
+  ]
+}
+```
+
+Use `high`/`pro` for work that should be handled by a qualified professional. Prefer official technical bodies and manufacturer documentation for safety-critical subjects.

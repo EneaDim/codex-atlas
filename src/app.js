@@ -1,5 +1,6 @@
 import { humanBody } from './data/human-body.js';
 import { finance } from './data/finance.js';
+import { home } from './data/home.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TAU = Math.PI * 2;
@@ -12,7 +13,7 @@ const RADII = {
   callout: 846,
 };
 
-const packs = { 'human-body': humanBody, finance };
+const packs = { 'human-body': humanBody, finance, home };
 const requestedPack = window.__CODEX_PACK__ || 'human-body';
 const pack = packs[requestedPack] || humanBody;
 const flat = flattenPack(pack);
@@ -461,9 +462,9 @@ function renderChrome() {
   must('about-copy').textContent = language === 'it'
     ? 'Dal centro partono grandi famiglie colorate che si ramificano in sistemi e concetti sempre più specifici. Le macro-aree restano come callout esterni separati, mentre Esplora e Impara usano la stessa mappa in modi diversi.'
     : 'Colored families radiate from the center and branch into systems and increasingly specific concepts. Macro areas remain as detached outer callouts, while Explore and Learn use the same map in different ways.';
-  must('about-fine').textContent = language === 'it'
+  must('about-fine').textContent = pack.resourceNote?.[language] || (language === 'it'
     ? 'Le sintesi sono a scopo didattico. Gli estratti Wikipedia vengono caricati al passaggio del mouse quando disponibili.'
-    : 'Summaries are educational. Wikipedia excerpts load on hover when available.';
+    : 'Summaries are educational. Wikipedia excerpts load on hover when available.');
 
   if (selectedId && nodeById.has(selectedId)) renderDrawer(nodeById.get(selectedId));
   renderSearchResults(searchInput.value);
@@ -534,9 +535,12 @@ function showHover(node) {
   const version = ++hoverVersion;
   const lang = language;
   const wikiUrl = wikipediaUrl(node, lang);
+  const badges = practicalBadges(node, lang);
+  const resourceCount = node.resources?.length || 0;
   hoverContent.innerHTML = `
-    <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${node.role === 'concept' ? 'WIKIPEDIA' : 'CODEX'}</span></div>
+    <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${resourceCount ? `${resourceCount} ${lang === 'it' ? 'RISORSE' : 'RESOURCES'}` : (node.role === 'concept' ? 'WIKIPEDIA' : 'CODEX')}</span></div>
     <h3>${escapeHtml(node.title[lang])}</h3>
+    ${badges ? `<div class="practical-badges compact">${badges}</div>` : ''}
     <p id="hover-copy">${escapeHtml(node.description[lang])}</p>
     <div class="hover-foot"><span id="hover-status">${node.role === 'concept' ? (lang === 'it' ? 'Caricamento estratto…' : 'Loading excerpt…') : roleLabel(node.role, lang)}</span>${wikiUrl ? `<a href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
   `;
@@ -610,17 +614,23 @@ function renderDrawer(node) {
   const path = nodePath(node);
   const wikiUrl = wikipediaUrl(node, language);
   const learnPos = node.role === 'concept' ? conceptSequence.findIndex((entry) => entry.id === node.id) : -1;
+  const badges = practicalBadges(node, language);
+  const safety = practicalSafetyCard(node, language);
+  const resources = renderResourceCards(node, language);
   drawerContent.innerHTML = `
     <p class="eyebrow">${roleLabel(node.role, language)}</p>
     <nav class="breadcrumbs">${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(entry.title[language])}</button>`).join('<span>›</span>')}</nav>
     <h2>${escapeHtml(node.title[language])}</h2>
+    ${badges ? `<div class="practical-badges">${badges}</div>` : ''}
     <p class="drawer-copy" id="drawer-copy">${escapeHtml(node.description[language])}</p>
+    ${safety}
     ${mode === 'learn' && node.role === 'concept' ? `
       <section class="learn-card">
         <div><span>${language === 'it' ? 'Percorso' : 'Learning path'}</span><strong>${learnPos + 1} / ${conceptSequence.length}</strong></div>
         <div class="progress"><span style="width:${((learnPos + 1) / conceptSequence.length) * 100}%"></span></div>
         <div class="learn-actions"><button data-learn="prev" ${learnPos <= 0 ? 'disabled' : ''}>← ${language === 'it' ? 'Prima' : 'Previous'}</button><button data-learn="next" ${learnPos >= conceptSequence.length - 1 ? 'disabled' : ''}>${language === 'it' ? 'Avanti' : 'Next'} →</button></div>
       </section>` : ''}
+    ${resources}
     ${wikiUrl ? `<a class="wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${language === 'it' ? 'Apri l’articolo completo' : 'Open full article'}</span><b>↗</b></a>` : ''}
   `;
   drawer.classList.add('open');
@@ -628,7 +638,7 @@ function renderDrawer(node) {
   drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, false)));
   drawer.querySelector('[data-learn="prev"]')?.addEventListener('click', () => stepLearn(-1));
   drawer.querySelector('[data-learn="next"]')?.addEventListener('click', () => stepLearn(1));
-  if (mode === 'explore' && node.role === 'concept') void hydrateDrawer(node, language);
+  if (mode === 'explore' && node.role === 'concept' && !pack.preferLocalDescriptions) void hydrateDrawer(node, language);
 }
 
 async function hydrateDrawer(node, lang) {
@@ -732,6 +742,73 @@ function wikipediaUrl(node, lang) {
   return `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replaceAll(' ', '_'))}`;
 }
 
+function mergeResources(...groups) {
+  const seen = new Set();
+  return groups.flatMap((group) => Array.isArray(group) ? group : []).filter((resource) => {
+    if (!resource?.url || seen.has(resource.url)) return false;
+    seen.add(resource.url);
+    return true;
+  });
+}
+
+function practicalBadges(node, lang) {
+  const items = [];
+  if (node.difficulty) {
+    const label = {
+      easy: lang === 'it' ? 'DIY semplice' : 'Simple DIY',
+      moderate: lang === 'it' ? 'Intermedio' : 'Intermediate',
+      pro: lang === 'it' ? 'Tecnico' : 'Professional',
+    }[node.difficulty] || node.difficulty;
+    items.push(`<span class="practical-badge difficulty-${escapeHtml(node.difficulty)}">${escapeHtml(label)}</span>`);
+  }
+  if (node.risk) {
+    const label = {
+      low: lang === 'it' ? 'Rischio basso' : 'Low risk',
+      medium: lang === 'it' ? 'Attenzione' : 'Caution',
+      high: lang === 'it' ? 'Rischio alto' : 'High risk',
+    }[node.risk] || node.risk;
+    items.push(`<span class="practical-badge risk-${escapeHtml(node.risk)}">${escapeHtml(label)}</span>`);
+  }
+  return items.join('');
+}
+
+function practicalSafetyCard(node, lang) {
+  if (!node.risk || node.role !== 'concept') return '';
+  const copy = {
+    low: lang === 'it'
+      ? 'In genere adatto a controlli o manutenzione leggera. Segui il manuale del componente e isola acqua o alimentazione quando pertinente.'
+      : 'Generally suitable for inspection or light maintenance. Follow the component manual and isolate water or power when relevant.',
+    medium: lang === 'it'
+      ? 'Richiede attenzione: se devi aprire impianti, lavorare in quota o non riesci a isolare in sicurezza la fonte, fermati e chiama un professionista.'
+      : 'Use caution: if the job requires opening building systems, working at height, or you cannot safely isolate the source, stop and call a professional.',
+    high: lang === 'it'
+      ? 'Non trattarlo come una procedura fai da te. Usa questa scheda per capire il sistema e riconoscere i segnali; l’intervento va affidato a un tecnico qualificato.'
+      : 'Do not treat this as a DIY procedure. Use this card to understand the system and recognize warning signs; hands-on work belongs with a qualified professional.',
+  }[node.risk];
+  if (!copy) return '';
+  const title = node.risk === 'high'
+    ? (lang === 'it' ? 'Quando chiamare un professionista' : 'When to call a professional')
+    : (lang === 'it' ? 'Nota pratica' : 'Practical note');
+  return `<section class="safety-card risk-${escapeHtml(node.risk)}"><strong>${escapeHtml(title)}</strong><p>${escapeHtml(copy)}</p></section>`;
+}
+
+function renderResourceCards(node, lang) {
+  const resources = node.resources || [];
+  if (!resources.length) return '';
+  const title = lang === 'it' ? 'Risorse pratiche' : 'Practical resources';
+  return `<section class="resource-section"><p class="resource-heading">${title}</p><div class="resource-grid">${resources.map((resource) => {
+    const label = resource.title?.[lang] || resource.title?.en || resource.source || resource.url;
+    const type = {
+      official: lang === 'it' ? 'FONTE UFFICIALE' : 'OFFICIAL',
+      safety: lang === 'it' ? 'SICUREZZA' : 'SAFETY',
+      tutorial: 'TUTORIAL',
+      manual: lang === 'it' ? 'MANUALE' : 'MANUAL',
+    }[resource.type] || 'LINK';
+    const icon = { official: '◎', safety: '!', tutorial: '↗', manual: '▤' }[resource.type] || '↗';
+    return `<a class="resource-link resource-${escapeHtml(resource.type || 'link')}" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer"><span>${icon}</span><span><small>${type}${resource.source ? ` · ${escapeHtml(resource.source)}` : ''}</small>${escapeHtml(label)}</span><b>↗</b></a>`;
+  }).join('')}</div></section>`;
+}
+
 function assertUniqueIds(nodes) {
   const seen = new Set();
   const duplicates = new Set();
@@ -774,10 +851,16 @@ function flattenPack(source) {
           domainId: domain.id,
           domainIndex,
           color: domain.color,
-          description: {
+          risk: concept.risk ?? system.risk ?? domain.risk,
+          difficulty: concept.difficulty ?? system.difficulty ?? domain.difficulty,
+          resources: mergeResources(domain.resources, system.resources, concept.resources),
+          description: concept.description || (source.id === 'home' ? {
+            en: `${concept.title.en}: understand its role, common warning signs and the safe boundary between routine DIY and professional work within ${system.title.en.toLowerCase()}.`,
+            it: `${concept.title.it}: capisci a cosa serve, quali segnali osservare e dove finisce il fai da te sicuro nell’ambito di ${system.title.it.toLowerCase()}.`,
+          } : {
             en: `${concept.title.en} is a key concept within ${system.title.en.toLowerCase()}.`,
             it: `${concept.title.it} è un concetto chiave nell’ambito di ${system.title.it.toLowerCase()}.`,
-          },
+          }),
         });
       });
     });

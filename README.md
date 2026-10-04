@@ -82,3 +82,22 @@ Finance contains 8 macro domains, 27 systems and 157 concepts covering foundatio
 - Mobile supports one-finger pan and two-finger pinch zoom.
 - Opening a node preserves the current viewport.
 - Node IDs are validated for uniqueness at startup.
+
+
+## Multiple Codex services
+
+The same repository can power multiple Railway services. Set one environment variable per service:
+
+```text
+Human Body: CODEX_PACK=human-body
+Finance:    CODEX_PACK=finance
+Home:       CODEX_PACK=home
+```
+
+Local Home preview:
+
+```bash
+CODEX_PACK=home npm run dev
+```
+
+The Home pack also supports curated practical resources, difficulty/risk badges and professional-safety boundaries in the shared renderer.
