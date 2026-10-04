@@ -1,41 +1,84 @@
-# Codex Atlas — clean rebuild
+# Codex Atlas
 
 A dependency-free interactive radial knowledge map inspired by the visual grammar of the Cognitive Bias Codex.
 
+The same repository now serves multiple content packs with one shared renderer:
+
+- `human-body` — Human Body Codex
+- `finance` — Finance Codex
+
 ## Run locally
+
+Human Body (default):
 
 ```bash
 npm run dev
+```
+
+Finance:
+
+```bash
+CODEX_PACK=finance npm run dev
 ```
 
 Open `http://localhost:4173`.
 
 ## Architecture
 
-- `index.html` — app shell
-- `src/app.js` — renderer, pan/zoom, Explore/Learn, search, Wikipedia previews
-- `src/styles.css` — visual system
-- `src/data/human-body.js` — Human Body knowledge pack
-- `public/images/human-body-center.svg` — replaceable center artwork
-- `server.mjs` — tiny Node static server for local use and Railway
+- `index.html` — shared app shell
+- `src/app.js` — shared renderer, pan/zoom, Explore/Learn, search and Wikipedia previews
+- `src/styles.css` — shared visual system
+- `src/data/human-body.js` — Human Body pack
+- `src/data/finance.js` — Finance pack
+- `public/images/human-body-center.webp` — Human Body center artwork
+- `public/images/finance-center.svg` — Finance center artwork
+- `server.mjs` — static server and runtime content-pack configuration
 
-No framework, no bundler, no database, no runtime dependency.
+No framework, no bundler, no database and no runtime dependency.
 
-## Railway
+## Runtime pack selection
 
-The included `railway.json` starts the site with `npm start`. Railway provides the `PORT` environment variable automatically.
+The server exposes `/runtime-config.js`, generated from `CODEX_PACK`.
 
-## Content model
+```text
+CODEX_PACK=human-body  -> Human Body Codex
+CODEX_PACK=finance     -> Finance Codex
+```
 
-The Human Body pack contains 7 macro domains, 17 systems and 154 concepts. Concepts link to English and Italian Wikipedia article titles. In Explore mode, Wikipedia introductions are fetched live in the active language and cached in memory for the session.
+If `CODEX_PACK` is omitted or invalid, `human-body` is used.
 
-## Interaction and readability
+## Railway: two sites, one repository
 
-- Branches render in a dedicated SVG layer below all text, so no branch can paint over a label.
-- Inner and leaf labels use subtle translucent backplates for contrast.
-- Explore popups stay fixed after opening and can be entered with the pointer to use the Wikipedia link.
-- Node IDs are validated for uniqueness at startup so broken parent/child links fail fast.
+Create two Railway services from the same GitHub repository.
 
-## Center artwork
+### Human Body service
 
-Replace `public/images/human-body-center.svg` with your final generated image and update `centerImage` in `src/data/human-body.js` if the filename changes.
+Environment variable:
+
+```text
+CODEX_PACK=human-body
+```
+
+### Finance service
+
+Environment variable:
+
+```text
+CODEX_PACK=finance
+```
+
+Both services use the included `railway.json` and start with `npm start`. Generate a different public domain for each service. Any future push to the shared GitHub repository can redeploy both services while keeping their different `CODEX_PACK` values.
+
+## Content
+
+Human Body contains 7 macro domains, 17 systems and 154 concepts.
+Finance contains 8 macro domains, 27 systems and 157 concepts covering foundations, accounting, corporate finance, markets, investing, portfolio construction, risk, derivatives, banking, personal finance, fintech and regulation.
+
+## Interaction
+
+- Branches render below all text for readability.
+- Labels use translucent backplates where needed.
+- Explore popups stay centered and interactive.
+- Mobile supports one-finger pan and two-finger pinch zoom.
+- Opening a node preserves the current viewport.
+- Node IDs are validated for uniqueness at startup.

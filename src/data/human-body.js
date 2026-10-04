@@ -4,6 +4,10 @@ export const humanBody = {
     "en": "Human Body Codex",
     "it": "Codex del Corpo Umano"
   },
+  "centerLabel": {
+    "en": "HUMAN BODY",
+    "it": "CORPO UMANO"
+  },
   "subtitle": {
     "en": "A dense visual map of human anatomy and physiology.",
     "it": "Una mappa visiva densa di anatomia e fisiologia umana."

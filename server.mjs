@@ -6,6 +6,9 @@ import { gzipSync } from 'node:zlib';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const port = Number(process.env.PORT || 4173);
+const allowedPacks = new Set(['human-body', 'finance']);
+const configuredPack = process.env.CODEX_PACK || 'human-body';
+const codexPack = allowedPacks.has(configuredPack) ? configuredPack : 'human-body';
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -33,6 +36,16 @@ async function loadFile(path) {
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url || '/', 'http://localhost');
+
+    if (url.pathname === '/runtime-config.js') {
+      const body = `window.__CODEX_PACK__ = ${JSON.stringify(codexPack)};`;
+      res.writeHead(200, {
+        'Content-Type': 'text/javascript; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end(body);
+      return;
+    }
     let pathname = decodeURIComponent(url.pathname);
     if (pathname === '/') pathname = '/index.html';
     const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
@@ -65,4 +78,4 @@ createServer(async (req, res) => {
     res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Server error');
   }
-}).listen(port, '0.0.0.0', () => console.log(`Codex Atlas: http://localhost:${port}`));
+}).listen(port, '0.0.0.0', () => console.log(`Codex Atlas (${codexPack}): http://localhost:${port}`));

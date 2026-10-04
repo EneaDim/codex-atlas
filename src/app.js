@@ -1,4 +1,5 @@
 import { humanBody } from './data/human-body.js';
+import { finance } from './data/finance.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TAU = Math.PI * 2;
@@ -11,7 +12,9 @@ const RADII = {
   callout: 846,
 };
 
-const pack = humanBody;
+const packs = { 'human-body': humanBody, finance };
+const requestedPack = window.__CODEX_PACK__ || 'human-body';
+const pack = packs[requestedPack] || humanBody;
 const flat = flattenPack(pack);
 assertUniqueIds(flat);
 const nodeById = new Map(flat.map((node) => [node.id, node]));
@@ -27,7 +30,6 @@ let hoverVersion = 0;
 let hoverTimer;
 let hoverNodeId = '';
 let hoverCardHovered = false;
-let hoverTransferUntil = 0;
 const wikiCache = new Map();
 
 const app = document.querySelector('#app');
@@ -36,7 +38,7 @@ app.innerHTML = `
     <header class="topbar">
       <a class="brand" href="/" aria-label="Codex Atlas home">
         <span class="brand-mark">C</span>
-        <span><strong id="brand-title"></strong><small>CODEX ATLAS / HUMAN BODY</small></span>
+        <span><strong id="brand-title"></strong><small id="brand-kicker"></small></span>
       </a>
       <div class="topbar-actions">
         <div class="mode-switch" role="group" aria-label="View mode">
@@ -59,8 +61,7 @@ app.innerHTML = `
     </section>
 
     <section class="canvas-wrap">
-      <svg id="codex-map" viewBox="-1100 -900 2200 1800" role="img" aria-labelledby="svg-title svg-desc">
-        <title id="svg-title"></title>
+      <svg id="codex-map" viewBox="-1100 -900 2200 1800" role="img" aria-describedby="svg-desc">
         <desc id="svg-desc"></desc>
         <g id="viewport"></g>
       </svg>
@@ -209,7 +210,7 @@ function appendCenter() {
     class: 'center-image',
   }));
   const text = svgEl('text', { x: 0, y: 122, 'text-anchor': 'middle', class: 'center-title' });
-  text.textContent = language === 'it' ? 'CORPO UMANO' : 'HUMAN BODY';
+  text.textContent = pack.centerLabel?.[language] || pack.title[language].toUpperCase();
   center.append(text);
   center.addEventListener('click', () => {
     closeDrawer();
@@ -330,8 +331,6 @@ function bindMapDelegation() {
 
     const node = nodeById.get(group.dataset.nodeId ?? '');
     if (!node) return;
-    const cardOpen = hoverCard.getAttribute('aria-hidden') === 'false';
-    if (cardOpen && hoverNodeId && hoverNodeId !== node.id && performance.now() < hoverTransferUntil) return;
     showHover(node);
   });
 
@@ -340,7 +339,10 @@ function bindMapDelegation() {
     if (!group) return;
     const next = nodeGroupFromTarget(event.relatedTarget);
     if (next?.dataset.nodeId === group.dataset.nodeId) return;
-    hoverTransferUntil = performance.now() + 460;
+    if (next?.dataset.nodeId) {
+      cancelHoverHide();
+      return;
+    }
     scheduleHoverHide(460);
   });
 
@@ -434,6 +436,7 @@ function renderChrome() {
   document.documentElement.lang = language;
   document.title = `${pack.title[language]} — Codex Atlas`;
   must('brand-title').textContent = pack.title[language];
+  must('brand-kicker').textContent = `CODEX ATLAS / ${pack.id.replaceAll('-', ' ').toUpperCase()}`;
   must('map-subtitle').textContent = pack.subtitle[language];
   must('mode-kicker').textContent = mode === 'learn'
     ? (language === 'it' ? 'PERCORSO GUIDATO' : 'GUIDED PATH')
@@ -443,7 +446,7 @@ function renderChrome() {
     : 'Hover concepts to preview · click to pin · drag to move';
   searchInput.placeholder = language === 'it' ? 'Cerca un concetto…' : 'Search a concept…';
   languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
-  must('svg-title').textContent = pack.title[language];
+  svg.setAttribute('aria-label', pack.title[language]);
   must('svg-desc').textContent = pack.subtitle[language];
   must('reset-view').textContent = language === 'it' ? 'Reimposta' : 'Reset view';
 
@@ -456,8 +459,8 @@ function renderChrome() {
 
   must('about-title').textContent = language === 'it' ? 'Come leggere il Codex' : 'How to read the Codex';
   must('about-copy').textContent = language === 'it'
-    ? 'Come nel Cognitive Bias Codex, dal centro partono grandi famiglie colorate che si ramificano in sistemi e concetti sempre più specifici. Le macro-aree restano come callout esterni separati.'
-    : 'Like the Cognitive Bias Codex, colored families radiate from the center and branch into systems and increasingly specific concepts. Macro areas remain as detached outer callouts.';
+    ? 'Dal centro partono grandi famiglie colorate che si ramificano in sistemi e concetti sempre più specifici. Le macro-aree restano come callout esterni separati, mentre Esplora e Impara usano la stessa mappa in modi diversi.'
+    : 'Colored families radiate from the center and branch into systems and increasingly specific concepts. Macro areas remain as detached outer callouts, while Explore and Learn use the same map in different ways.';
   must('about-fine').textContent = language === 'it'
     ? 'Le sintesi sono a scopo didattico. Gli estratti Wikipedia vengono caricati al passaggio del mouse quando disponibili.'
     : 'Summaries are educational. Wikipedia excerpts load on hover when available.';
@@ -524,11 +527,6 @@ function bindUi() {
   });
 }
 
-function showHoverFromElement(node, element) {
-  const rect = element.getBoundingClientRect();
-  showHover(node);
-}
-
 function showHover(node) {
   cancelHoverHide();
   if (hoverNodeId === node.id && hoverCard.getAttribute('aria-hidden') === 'false') return;
@@ -587,7 +585,6 @@ function hideHover() {
   hoverVersion += 1;
   hoverNodeId = '';
   hoverCardHovered = false;
-  hoverTransferUntil = 0;
   hoverCard.classList.remove('open');
   hoverCard.setAttribute('aria-hidden', 'true');
 }
@@ -778,8 +775,8 @@ function flattenPack(source) {
           domainIndex,
           color: domain.color,
           description: {
-            en: `${concept.title.en} is a key structure, process or concept within ${system.title.en.toLowerCase()}.`,
-            it: `${concept.title.it} è una struttura, un processo o un concetto chiave nell’ambito di ${system.title.it.toLowerCase()}.`,
+            en: `${concept.title.en} is a key concept within ${system.title.en.toLowerCase()}.`,
+            it: `${concept.title.it} è un concetto chiave nell’ambito di ${system.title.it.toLowerCase()}.`,
           },
         });
       });
