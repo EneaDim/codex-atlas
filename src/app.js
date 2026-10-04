@@ -367,7 +367,7 @@ function bindMapDelegation() {
     if (!id) return;
     event.stopPropagation();
     hideHover();
-    openNode(id, true);
+    openNode(id, false);
   });
 
   viewport.addEventListener('keydown', (event) => {
@@ -378,7 +378,7 @@ function bindMapDelegation() {
     if (!id) return;
     event.preventDefault();
     hideHover();
-    openNode(id, true);
+    openNode(id, false);
   });
 }
 
@@ -628,7 +628,7 @@ function renderDrawer(node) {
   `;
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
-  drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, true)));
+  drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, false)));
   drawer.querySelector('[data-learn="prev"]')?.addEventListener('click', () => stepLearn(-1));
   drawer.querySelector('[data-learn="next"]')?.addEventListener('click', () => stepLearn(1));
   if (mode === 'explore' && node.role === 'concept') void hydrateDrawer(node, language);
@@ -1085,7 +1085,9 @@ function createViewportController(svgElement, viewportElement, onScale) {
     },
     focus(radius, angle) {
       const [px, py] = polar(radius, angle);
-      scale = radius >= RADII.concept ? 1.45 : 1.25;
+      const targetScale = radius >= RADII.concept ? 1.45 : 1.25;
+      // Automatic focus may zoom in, but it must never zoom the user out.
+      scale = Math.max(scale, targetScale);
       x = -px * scale * 0.18;
       y = -py * scale * 0.18;
       apply();
