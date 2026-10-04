@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="62%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f2f5f7"/>
+    </radialGradient>
+  </defs>
+  <circle cx="160" cy="160" r="154" fill="url(#bg)"/>
+  <g fill="none" stroke="#4a525a" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="160" cy="67" r="24" stroke-width="3"/>
+    <path d="M137 96c-16 11-23 28-23 50v28c0 18 7 31 18 42l7 11v49" stroke-width="3"/>
+    <path d="M183 96c16 11 23 28 23 50v28c0 18-7 31-18 42l-7 11v49" stroke-width="3"/>
+    <path d="M115 128 82 188" stroke-width="3"/>
+    <path d="M205 128 238 188" stroke-width="3"/>
+    <path d="M142 100c8 7 28 7 36 0" stroke-width="2" opacity=".7"/>
+    <path d="M131 145c12-8 47-8 58 0" stroke-width="1.8" opacity=".5"/>
+    <path d="M145 147c-7 11-7 31 3 42 8 8 17 8 24 0 10-11 10-31 3-42" stroke-width="2.2"/>
+    <path d="M137 190c9 8 37 8 46 0" stroke-width="1.8" opacity=".65"/>
+    <path d="M143 220c11 4 23 4 34 0" stroke-width="1.8" opacity=".6"/>
+  </g>
+  <g fill="#4f9a8c" opacity=".68">
+    <circle cx="160" cy="119" r="4"/>
+    <circle cx="160" cy="151" r="4"/>
+    <circle cx="160" cy="184" r="4"/>
+  </g>
+</svg>
