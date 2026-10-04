@@ -16,6 +16,7 @@ const RADII = {
 const packs = { 'human-body': humanBody, finance, home };
 const requestedPack = window.__CODEX_PACK__ || 'human-body';
 const pack = packs[requestedPack] || humanBody;
+document.documentElement.dataset.codexPack = pack.id;
 const flat = flattenPack(pack);
 assertUniqueIds(flat);
 const nodeById = new Map(flat.map((node) => [node.id, node]));
@@ -443,8 +444,8 @@ function renderChrome() {
     ? (language === 'it' ? 'PERCORSO GUIDATO' : 'GUIDED PATH')
     : (language === 'it' ? 'MAPPA INTERATTIVA' : 'INTERACTIVE MAP');
   must('map-hint').textContent = language === 'it'
-    ? 'Passa sui concetti per l’anteprima · clicca per fissare · trascina per muoverti'
-    : 'Hover concepts to preview · click to pin · drag to move';
+    ? 'Passa sui concetti per l’anteprima · clicca per aprire · trascina e usa la rotella per esplorare'
+    : 'Hover concepts to preview · click to open · drag and use the wheel to explore';
   searchInput.placeholder = language === 'it' ? 'Cerca un concetto…' : 'Search a concept…';
   languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
   svg.setAttribute('aria-label', pack.title[language]);
@@ -537,35 +538,48 @@ function showHover(node) {
   const wikiUrl = wikipediaUrl(node, lang);
   const badges = practicalBadges(node, lang);
   const resourceCount = node.resources?.length || 0;
+  const isConcept = node.role === 'concept';
   hoverContent.innerHTML = `
-    <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${resourceCount ? `${resourceCount} ${lang === 'it' ? 'RISORSE' : 'RESOURCES'}` : (node.role === 'concept' ? 'WIKIPEDIA' : 'CODEX')}</span></div>
+    <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${resourceCount ? `${resourceCount} ${lang === 'it' ? 'RISORSE' : 'RESOURCES'}` : (isConcept ? 'WIKIPEDIA' : 'CODEX')}</span></div>
     <h3>${escapeHtml(node.title[lang])}</h3>
     ${badges ? `<div class="practical-badges compact">${badges}</div>` : ''}
-    <p id="hover-copy">${escapeHtml(node.description[lang])}</p>
-    <div class="hover-foot"><span id="hover-status">${node.role === 'concept' ? (lang === 'it' ? 'Caricamento estratto…' : 'Loading excerpt…') : roleLabel(node.role, lang)}</span>${wikiUrl ? `<a href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
+    <div class="hover-copy-wrap ${isConcept ? 'is-loading' : ''}" id="hover-copy-wrap">
+      <p id="hover-copy">${isConcept
+        ? escapeHtml(lang === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…')
+        : escapeHtml(node.description[lang])}</p>
+    </div>
+    <div class="hover-foot"><span id="hover-status">${isConcept ? (lang === 'it' ? 'Wikipedia' : 'Wikipedia') : roleLabel(node.role, lang)}</span>${wikiUrl ? `<a id="hover-wiki" href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
   `;
   hoverCard.classList.add('open');
   hoverCard.setAttribute('aria-hidden', 'false');
   positionHover();
-  if (node.role === 'concept') void hydrateHover(node, version, lang);
+  if (isConcept) void hydrateHover(node, version, lang);
 }
 
 async function hydrateHover(node, version, lang) {
-  await delay(110);
+  await delay(70);
   if (version !== hoverVersion || mode === 'learn' || lang !== language) return;
-  const extract = await fetchWikipediaIntro(node.wiki[lang], lang);
+  const result = await fetchWikipediaIntroForNode(node, lang, 3);
   if (version !== hoverVersion || lang !== language) return;
   const copy = hoverCard.querySelector('#hover-copy');
+  const wrap = hoverCard.querySelector('#hover-copy-wrap');
   const status = hoverCard.querySelector('#hover-status');
-  if (extract && copy) copy.textContent = extract;
-  if (status) status.textContent = extract
-    ? (lang === 'it' ? 'Estratto Wikipedia · CC BY-SA' : 'Wikipedia excerpt · CC BY-SA')
-    : (lang === 'it' ? 'Sintesi locale' : 'Local summary');
+  const link = hoverCard.querySelector('#hover-wiki');
+  if (wrap) wrap.classList.remove('is-loading');
+  if (result?.extract && copy) copy.textContent = result.extract;
+  else if (copy) copy.textContent = lang === 'it'
+    ? 'Wikipedia non ha restituito un’introduzione per questa voce. Apri l’articolo completo o usa le risorse collegate.'
+    : 'Wikipedia did not return an introduction for this entry. Open the full article or use the linked resources.';
+  if (status) status.textContent = result?.extract
+    ? `Wikipedia ${result.lang.toUpperCase()} · CC BY-SA`
+    : (lang === 'it' ? 'Estratto non disponibile' : 'Excerpt unavailable');
+  if (result?.url && link) link.href = result.url;
+  positionHover();
 }
 
 function positionHover() {
   const margin = 16;
-  const width = Math.min(350, window.innerWidth - margin * 2);
+  const width = Math.min(390, window.innerWidth - margin * 2);
   hoverCard.style.width = `${width}px`;
   const rect = hoverCard.getBoundingClientRect();
   const x = Math.max(margin, (window.innerWidth - width) / 2);
@@ -617,12 +631,21 @@ function renderDrawer(node) {
   const badges = practicalBadges(node, language);
   const safety = practicalSafetyCard(node, language);
   const resources = renderResourceCards(node, language);
+  const isConcept = node.role === 'concept';
+  const introLabel = language === 'it' ? 'In breve · Wikipedia' : 'Overview · Wikipedia';
+  const detailLabel = language === 'it' ? 'Dettagli pratici' : 'Practical details';
   drawerContent.innerHTML = `
     <p class="eyebrow">${roleLabel(node.role, language)}</p>
     <nav class="breadcrumbs">${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(entry.title[language])}</button>`).join('<span>›</span>')}</nav>
     <h2>${escapeHtml(node.title[language])}</h2>
     ${badges ? `<div class="practical-badges">${badges}</div>` : ''}
-    <p class="drawer-copy" id="drawer-copy">${escapeHtml(node.description[language])}</p>
+    ${isConcept ? `
+      <section class="wiki-intro-card is-loading" id="wiki-intro-card">
+        <div class="section-kicker"><span class="wiki-dot">W</span><span>${introLabel}</span></div>
+        <p class="drawer-copy" id="drawer-copy">${language === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…'}</p>
+      </section>
+    ` : `<p class="drawer-copy">${escapeHtml(node.description[language])}</p>`}
+    ${isConcept && (safety || resources) ? `<div class="section-divider"><span>${detailLabel}</span></div>` : ''}
     ${safety}
     ${mode === 'learn' && node.role === 'concept' ? `
       <section class="learn-card">
@@ -631,22 +654,29 @@ function renderDrawer(node) {
         <div class="learn-actions"><button data-learn="prev" ${learnPos <= 0 ? 'disabled' : ''}>← ${language === 'it' ? 'Prima' : 'Previous'}</button><button data-learn="next" ${learnPos >= conceptSequence.length - 1 ? 'disabled' : ''}>${language === 'it' ? 'Avanti' : 'Next'} →</button></div>
       </section>` : ''}
     ${resources}
-    ${wikiUrl ? `<a class="wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${language === 'it' ? 'Apri l’articolo completo' : 'Open full article'}</span><b>↗</b></a>` : ''}
+    ${wikiUrl ? `<a class="wiki-link" id="drawer-wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${language === 'it' ? 'Apri l’articolo completo' : 'Open full article'}</span><b>↗</b></a>` : ''}
   `;
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, false)));
   drawer.querySelector('[data-learn="prev"]')?.addEventListener('click', () => stepLearn(-1));
   drawer.querySelector('[data-learn="next"]')?.addEventListener('click', () => stepLearn(1));
-  if (mode === 'explore' && node.role === 'concept' && !pack.preferLocalDescriptions) void hydrateDrawer(node, language);
+  if (isConcept) void hydrateDrawer(node, language);
 }
 
 async function hydrateDrawer(node, lang) {
   const id = node.id;
-  const extract = await fetchWikipediaIntro(node.wiki[lang], lang);
-  if (!extract || selectedId !== id || language !== lang || mode !== 'explore') return;
-  const copy = must('drawer-copy');
-  copy.textContent = extract;
+  const result = await fetchWikipediaIntroForNode(node, lang, 5);
+  if (selectedId !== id || language !== lang) return;
+  const copy = document.getElementById('drawer-copy');
+  const card = document.getElementById('wiki-intro-card');
+  const link = document.getElementById('drawer-wiki-link');
+  if (card) card.classList.remove('is-loading');
+  if (result?.extract && copy) copy.textContent = result.extract;
+  else if (copy) copy.textContent = lang === 'it'
+    ? 'Wikipedia non ha restituito un’introduzione per questa voce. Puoi aprire l’articolo completo oppure consultare le risorse pratiche qui sotto.'
+    : 'Wikipedia did not return an introduction for this entry. You can open the full article or use the practical resources below.';
+  if (result?.url && link) link.href = result.url;
 }
 
 function closeDrawer() {
@@ -716,11 +746,11 @@ function closeSearch() {
   searchResults.hidden = true;
 }
 
-async function fetchWikipediaIntro(title, lang) {
+async function fetchWikipediaIntro(title, lang, sentences = 3) {
   if (!title) return null;
-  const key = `${lang}:${title}`;
+  const key = `${lang}:${sentences}:${title}`;
   if (wikiCache.has(key)) return wikiCache.get(key);
-  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&exintro=1&explaintext=1&exsentences=3&titles=${encodeURIComponent(title)}`;
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts&exintro=1&explaintext=1&exsentences=${sentences}&titles=${encodeURIComponent(title)}`;
   try {
     const response = await fetch(url, { headers: { accept: 'application/json' } });
     if (!response.ok) throw new Error('Wikipedia request failed');
@@ -736,10 +766,24 @@ async function fetchWikipediaIntro(title, lang) {
   }
 }
 
-function wikipediaUrl(node, lang) {
-  const title = node.wiki?.[lang];
+async function fetchWikipediaIntroForNode(node, lang, sentences = 3) {
+  const primaryTitle = node.wiki?.[lang];
+  const primary = await fetchWikipediaIntro(primaryTitle, lang, sentences);
+  if (primary) return { extract: primary, lang, title: primaryTitle, url: wikipediaUrlFrom(primaryTitle, lang) };
+  if (lang !== 'en' && node.wiki?.en) {
+    const fallback = await fetchWikipediaIntro(node.wiki.en, 'en', sentences);
+    if (fallback) return { extract: fallback, lang: 'en', title: node.wiki.en, url: wikipediaUrlFrom(node.wiki.en, 'en') };
+  }
+  return null;
+}
+
+function wikipediaUrlFrom(title, lang) {
   if (!title) return '';
   return `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replaceAll(' ', '_'))}`;
+}
+
+function wikipediaUrl(node, lang) {
+  return wikipediaUrlFrom(node.wiki?.[lang], lang);
 }
 
 function mergeResources(...groups) {
@@ -1035,7 +1079,8 @@ function createViewportController(svgElement, viewportElement, onScale) {
     const svgPoint = clientToSvg(event.clientX, event.clientY);
     const anchorWorldX = (svgPoint.x - x) / scale;
     const anchorWorldY = (svgPoint.y - y) / scale;
-    const factor = event.deltaY < 0 ? 1.11 : 0.90;
+    const normalizedDelta = Math.max(-180, Math.min(180, event.deltaY));
+    const factor = Math.exp(-normalizedDelta * 0.00135);
     const nextScale = clampScale(scale * factor);
 
     x = svgPoint.x - anchorWorldX * nextScale;

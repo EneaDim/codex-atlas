@@ -43,7 +43,7 @@ export const home = {
   subtitle: { en: 'A practical atlas of household systems, maintenance and safe DIY.', it: 'Un atlante pratico di impianti domestici, manutenzione e fai da te sicuro.' },
   centerLabel: { en: 'HOME', it: 'CASA' },
   centerImage: '/public/images/home-center.svg',
-  preferLocalDescriptions: true,
+  preferLocalDescriptions: false,
   resourceNote: { en: 'Practical links are curated from technical bodies, public agencies, manufacturers and established how-to publishers. High-risk work is marked for qualified professionals.', it: 'I link pratici sono selezionati da enti tecnici, agenzie pubbliche, produttori e fonti how-to consolidate. I lavori ad alto rischio sono indicati come attività da tecnico qualificato.' },
   domains: [
     D("plumbing-water", "Plumbing & Water", "Idraulica e Acqua", "Water supply, fixtures, drains and the everyday components that keep water moving safely through a home.", "Alimentazione idrica, rubinetteria, scarichi e componenti quotidiani che fanno circolare l’acqua in casa.", "#3589B8", [
