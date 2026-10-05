@@ -80,6 +80,50 @@ Domains and systems may also define these fields. Concepts inherit applicable me
 
 High-risk content should explain systems and warning signs rather than turn professional work into a DIY procedure.
 
+
+## Academic study metadata
+
+The `statistics` pack uses course-note content instead of Wikipedia-first concept cards.
+
+A study concept may define:
+
+```js
+{
+  description: { en: 'Two-line explanation...', it: 'Spiegazione in due righe...' },
+  study: {
+    summary: { en: '...', it: '...' },
+    source: { en: 'Chapter 3 · course notebook', it: 'Capitolo 3 · notebook del corso' },
+    formulas: [
+      {
+        title: { en: 'Formula', it: 'Formula' },
+        tex: String.raw`P(F\mid E)=\frac{P(E\cap F)}{P(E)}`
+      }
+    ],
+    terms: [
+      {
+        symbol: String.raw`P(F\mid E)`,
+        label: { en: 'probability of F given E', it: 'probabilità di F dato E' }
+      }
+    ],
+    example: {
+      title: { en: 'Example', it: 'Esempio' },
+      body: { en: '...', it: '...' },
+      tex: String.raw`\frac7{25}=0.28`
+    }
+  }
+}
+```
+
+The shared renderer displays, in order:
+
+1. a short explanation;
+2. rendered formulas;
+3. the meaning of symbols/terms;
+4. a worked example;
+5. an optional note.
+
+Formulas are written in LaTeX and rendered in the browser with MathJax.
+
 ## Adding a new Codex
 
 Suppose the new pack is `economics`.

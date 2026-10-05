@@ -249,3 +249,21 @@
   :root[data-theme="light"] .topbar-actions { background: rgba(255,255,255,.90); }
   :root[data-theme="light"] .drawer::before { background: rgba(38,40,43,.16); }
 }
+
+
+:root[data-theme="light"] .study-intro-card { background: rgba(var(--accent-rgb), .035); }
+:root[data-theme="light"] .formula-card,
+:root[data-theme="light"] .example-section,
+:root[data-theme="light"] .study-note,
+:root[data-theme="light"] .term-row { background: rgba(38,40,43,.025); }
+:root[data-theme="light"] .formula-card small,
+:root[data-theme="light"] .study-heading { color: #6e7479; }
+:root[data-theme="light"] .math-display,
+:root[data-theme="light"] .example-math,
+:root[data-theme="light"] .hover-math,
+:root[data-theme="light"] .term-symbol { color: #24282c; }
+:root[data-theme="light"] .example-math { background: rgba(38,40,43,.035); }
+:root[data-theme="light"] .term-row,
+:root[data-theme="light"] .study-example-copy,
+:root[data-theme="light"] .study-note p { color: #4f555a; }
+:root[data-theme="light"] .study-note strong { color: #303438; }

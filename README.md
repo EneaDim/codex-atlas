@@ -2,7 +2,7 @@
 
 Codex Atlas is a collection of interactive radial knowledge maps for exploring complex subjects visually.
 
-The project currently includes three Codex, available in Italian and English, with desktop/mobile support and dark/light themes.
+The project currently includes four Codex, available in Italian and English, with desktop/mobile support and dark/light themes.
 
 ## Live sites
 
@@ -11,6 +11,7 @@ The project currently includes three Codex, available in Italian and English, wi
 | Human Body | [codex-human-body.up.railway.app](https://codex-human-body.up.railway.app) |
 | Finance | [codex-finance.up.railway.app](https://codex-finance.up.railway.app) |
 | Home / Casa Pratica | [codex-home.up.railway.app](https://codex-home.up.railway.app) |
+| Statistics | Railway service: `CODEX_PACK=statistics` |
 
 ## Try it locally
 
@@ -27,6 +28,7 @@ Start the Codex you want to try:
 npm run dev:human-body
 npm run dev:finance
 npm run dev:home
+npm run dev:statistics
 ```
 
 Then open:
@@ -43,3 +45,4 @@ More detailed documentation is available in [`docs/`](docs/):
 - [Content packs](docs/CONTENT_PACKS.md)
 - [Development](docs/DEVELOPMENT.md)
 - [Railway CLI](docs/RAILWAY_CLI.md)
+- [Statistics course coverage](docs/STATISTICS_COURSE.md)

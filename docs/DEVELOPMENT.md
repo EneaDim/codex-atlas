@@ -19,6 +19,7 @@ npm run dev:finance
 
 ```bash
 npm run dev:home
+npm run dev:statistics
 ```
 
 Each command serves `http://localhost:4173`. Run one at a time unless you explicitly provide different `PORT` values.
@@ -92,3 +93,8 @@ npm run audit
 The audit rejects exact duplicate files, known legacy paths and any `.ts` file under `src/`.
 This prevents old prototypes from silently coexisting with the active implementation.
 
+
+
+## Statistics course pack
+
+`CODEX_PACK=statistics` uses the six supplied course notebooks as its source. Formula cards use LaTeX rendered by MathJax in the browser.

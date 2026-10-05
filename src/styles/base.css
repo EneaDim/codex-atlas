@@ -21,6 +21,7 @@
 }
 :root[data-codex-pack="finance"] { --accent: #f0b64e; --accent-rgb: 240, 182, 78; }
 :root[data-codex-pack="home"] { --accent: #55d1af; --accent-rgb: 85, 209, 175; }
+:root[data-codex-pack="statistics"] { --accent: #8b7cf6; --accent-rgb: 139, 124, 246; }
 * { box-sizing: border-box; }
 html, body, #app { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 body {
@@ -377,6 +378,31 @@ kbd { border: 1px solid var(--line); border-bottom-color: var(--line-strong); bo
 .drawer-copy { margin: 0; color: #c1c9d0; font-size: 13.5px; font-weight: 430; line-height: 1.66; }
 .wiki-intro-card { position: relative; margin-top: 5px; padding: 15px 16px 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.032); overflow: hidden; }
 .wiki-intro-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 2px; background: linear-gradient(180deg, rgba(var(--accent-rgb), .95), rgba(var(--accent-rgb), .08)); }
+
+.study-intro-card { position: relative; margin-top: 5px; padding: 15px 16px 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(var(--accent-rgb), .045); overflow: hidden; }
+.study-intro-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 2px; background: linear-gradient(180deg, rgba(var(--accent-rgb), .95), rgba(var(--accent-rgb), .10)); }
+.study-dot { width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid rgba(var(--accent-rgb), .34); border-radius: 7px; color: var(--accent); background: rgba(var(--accent-rgb), .08); font-family: Georgia, serif; font-size: 12px; font-weight: 700; }
+.study-section { margin-top: 18px; }
+.study-heading { margin: 0 0 8px; color: var(--muted); font-size: 7.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.formula-grid { display: grid; gap: 8px; }
+.formula-card, .example-section, .study-note { border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.028); }
+.formula-card { padding: 12px 14px 13px; }
+.formula-card small { display: block; margin-bottom: 7px; color: #9ba6af; font-size: 7.2px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.math-display, .example-math, .hover-math { color: #f1f5f8; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; -webkit-overflow-scrolling: touch; }
+.math-display { padding: 5px 0 2px; font-size: 13px; text-align: center; }
+.example-math { margin-top: 10px; padding: 11px 12px; border-radius: 11px; background: rgba(0,0,0,.16); font-size: 12px; text-align: center; }
+.hover-math { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 10.5px; text-align: center; }
+.math-display mjx-container, .example-math mjx-container, .hover-math mjx-container { margin: .15em 0 !important; min-width: max-content; }
+.term-list { display: grid; gap: 7px; }
+.term-row { display: grid; grid-template-columns: minmax(84px, auto) 1fr; align-items: start; gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); color: #bac4cc; font-size: 11px; line-height: 1.45; }
+.term-symbol { color: #eef4f8; font-weight: 650; white-space: nowrap; }
+.example-section { padding: 13px 14px 14px; }
+.example-section .study-heading { margin-bottom: 8px; color: color-mix(in srgb, var(--accent) 72%, #fff); }
+.study-example-copy { margin: 0; color: #b9c3cb; font-size: 11.7px; line-height: 1.58; }
+.study-note { margin-top: 12px; padding: 11px 13px; background: rgba(var(--accent-rgb), .035); }
+.study-note strong { display: block; margin-bottom: 5px; color: #dfe6eb; font-size: 9px; }
+.study-note p { margin: 0; color: #aeb8c0; font-size: 11px; line-height: 1.52; }
+.math-fallback .math-display, .math-fallback .example-math, .math-fallback .hover-math, .math-fallback .term-symbol { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: normal; }
 .section-kicker { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #9da7b0; font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .wiki-dot { width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid rgba(var(--accent-rgb), .34); border-radius: 7px; color: var(--accent); background: rgba(var(--accent-rgb), .08); font-family: Georgia, serif; font-size: 11px; }
 .section-divider { display: flex; align-items: center; gap: 10px; margin: 22px 0 11px; color: var(--muted); font-size: 7.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }

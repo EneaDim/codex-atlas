@@ -6,7 +6,7 @@ This document explains how Codex Atlas is organized and where each responsibilit
 
 > **One renderer, many content packs.**
 
-Human Body, Finance and Home share the same application code. A new Codex should normally be added as a new pack, not as a copy of the UI.
+Human Body, Finance, Home and Statistics share the same application code. A new Codex should normally be added as a new pack, not as a copy of the UI.
 
 ## Repository map
 
@@ -28,7 +28,9 @@ codex-atlas/
 │   └── images/
 │       ├── human-body/center.webp
 │       ├── finance/center.svg
-│       └── home/center.svg
+│       ├── home/
+│       │   └── center.svg
+│       └── statistics/center.svg
 │
 ├── scripts/
 │   ├── audit.mjs
@@ -41,6 +43,7 @@ codex-atlas/
     │   ├── constants.js
     │   ├── dom.js
     │   ├── layout.js
+    │   ├── math.js
     │   ├── viewport.js
     │   └── wikipedia.js
     ├── packs/
@@ -48,7 +51,8 @@ codex-atlas/
     │   ├── registry.js
     │   ├── human-body.js
     │   ├── finance.js
-    │   └── home.js
+    │   ├── home.js
+    │   └── statistics.js
     └── styles/
         ├── main.css
         ├── base.css
@@ -84,6 +88,7 @@ server.mjs
              ├─ src/packs/registry.js
              ├─ src/core/layout.js
              ├─ src/core/viewport.js
+             ├─ src/core/math.js
              ├─ src/core/wikipedia.js
              └─ src/styles/main.css
 ```
@@ -110,6 +115,7 @@ Project metadata and local scripts:
 npm run dev:human-body
 npm run dev:finance
 npm run dev:home
+npm run dev:statistics
 npm run check
 ```
 
@@ -137,6 +143,10 @@ Reusable DOM and SVG helpers.
 
 Transforms pack data into the radial hierarchy, calculates positions and validates content IDs.
 
+### `math.js`
+
+Loads MathJax-backed typesetting for lesson formulas and examples. If the external renderer is unavailable, the UI falls back to readable TeX text.
+
 ### `viewport.js`
 
 Camera and gesture behavior: drag, wheel/trackpad zoom, one-finger pan and two-finger pinch.
@@ -154,6 +164,7 @@ Subject-specific content.
 - `human-body.js` — Human Body content.
 - `finance.js` — Finance content.
 - `home.js` — Home / Casa Pratica content, practical metadata and resources.
+- `statistics.js` — Statistics course map with short explanations, formulas, term legends and worked examples.
 
 Pack files should contain **content**, not renderer logic. Pack IDs are registered only once, in `registry.js`.
 

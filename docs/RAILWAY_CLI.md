@@ -377,3 +377,30 @@ The exact Railway-provided hostname depends on global availability.
 - Environments: https://docs.railway.com/environments
 - Domains: https://docs.railway.com/networking/domains/working-with-domains
 - Infrastructure as Code: https://docs.railway.com/infrastructure-as-code
+
+
+## Statistics service
+
+To deploy the Statistics Codex from the same repository, create or connect a fourth service named `statistics` and set:
+
+```bash
+railway variable set CODEX_PACK=statistics -s statistics -e production
+```
+
+Connect it to the same GitHub repository and branch:
+
+```bash
+railway service source connect \
+  --repo EneaDim/codex-atlas \
+  --branch main \
+  --service statistics \
+  -e production
+```
+
+Then create its public Railway domain:
+
+```bash
+railway domain -s statistics -e production
+```
+
+The service uses the same `npm start` command as every other Codex.

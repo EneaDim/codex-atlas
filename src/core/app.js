@@ -3,6 +3,7 @@ import { RADII } from './constants.js';
 import { escapeHtml, delay, must, svgEl } from './dom.js';
 import { assertUniqueIds, buildLayout, flattenPack, polar } from './layout.js';
 import { createViewportController } from './viewport.js';
+import { typesetMath } from './math.js';
 import { fetchWikipediaIntroForNode, wikipediaUrl } from './wikipedia.js';
 
 const requestedPack = window.__CODEX_PACK__ || 'human-body';
@@ -561,21 +562,34 @@ function showHover(node) {
   const badges = practicalBadges(node, lang);
   const resourceCount = node.resources?.length || 0;
   const isConcept = node.role === 'concept';
+  const isStudy = Boolean(isConcept && node.study);
+  const studyFormula = isStudy ? node.study.formulas?.[0]?.tex : '';
+  const statusLabel = isStudy
+    ? (node.study.source?.[lang] || (lang === 'it' ? 'NOTE DEL CORSO' : 'COURSE NOTES'))
+    : (resourceCount ? `${resourceCount} ${lang === 'it' ? 'RISORSE' : 'RESOURCES'}` : (isConcept ? 'WIKIPEDIA' : 'CODEX'));
+
   hoverContent.innerHTML = `
-    <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${resourceCount ? `${resourceCount} ${lang === 'it' ? 'RISORSE' : 'RESOURCES'}` : (isConcept ? 'WIKIPEDIA' : 'CODEX')}</span></div>
+    <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${escapeHtml(statusLabel)}</span></div>
     <h3>${escapeHtml(node.title[lang])}</h3>
     ${badges ? `<div class="practical-badges compact">${badges}</div>` : ''}
-    <div class="hover-copy-wrap ${isConcept ? 'is-loading' : ''}" id="hover-copy-wrap">
-      <p id="hover-copy">${isConcept
-        ? escapeHtml(lang === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…')
-        : escapeHtml(node.description[lang])}</p>
+    <div class="hover-copy-wrap ${isConcept && !isStudy ? 'is-loading' : ''}" id="hover-copy-wrap">
+      <p id="hover-copy">${isStudy
+        ? escapeHtml(node.study.summary?.[lang] || node.description?.[lang] || '')
+        : (isConcept
+          ? escapeHtml(lang === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…')
+          : escapeHtml(node.description[lang]))}</p>
+      ${studyFormula ? `<div class="hover-math">\\[${escapeHtml(studyFormula)}\\]</div>` : ''}
     </div>
-    <div class="hover-foot"><span id="hover-status">${isConcept ? (lang === 'it' ? 'Wikipedia' : 'Wikipedia') : roleLabel(node.role, lang)}</span>${wikiUrl ? `<a id="hover-wiki" href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
+    <div class="hover-foot"><span id="hover-status">${isStudy ? escapeHtml(lang === 'it' ? 'Sintesi dai notebook' : 'Summary from notebooks') : (isConcept ? 'Wikipedia' : roleLabel(node.role, lang))}</span>${wikiUrl ? `<a id="hover-wiki" href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
   `;
   hoverCard.classList.add('open');
   hoverCard.setAttribute('aria-hidden', 'false');
   positionHover();
-  if (isConcept) void hydrateHover(node, version, lang);
+  if (isStudy) {
+    void typesetMath(hoverContent).then(positionHover);
+  } else if (isConcept) {
+    void hydrateHover(node, version, lang);
+  }
 }
 
 async function hydrateHover(node, version, lang) {
@@ -654,28 +668,33 @@ function renderDrawer(node) {
   const safety = practicalSafetyCard(node, language);
   const resources = renderResourceCards(node, language);
   const isConcept = node.role === 'concept';
+  const isStudy = Boolean(isConcept && node.study);
   const introLabel = language === 'it' ? 'In breve · Wikipedia' : 'Overview · Wikipedia';
   const detailLabel = language === 'it' ? 'Dettagli pratici' : 'Practical details';
+  const conceptBody = isStudy
+    ? renderStudyLesson(node, language)
+    : (isConcept ? `
+      <section class="wiki-intro-card is-loading" id="wiki-intro-card">
+        <div class="section-kicker"><span class="wiki-dot">W</span><span>${introLabel}</span></div>
+        <p class="drawer-copy" id="drawer-copy">${language === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…'}</p>
+      </section>
+    ` : `<p class="drawer-copy">${escapeHtml(node.description[language])}</p>`);
+
   drawerContent.innerHTML = `
     <p class="eyebrow">${roleLabel(node.role, language)}</p>
     <nav class="breadcrumbs">${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(entry.title[language])}</button>`).join('<span>›</span>')}</nav>
     <h2>${escapeHtml(node.title[language])}</h2>
     ${badges ? `<div class="practical-badges">${badges}</div>` : ''}
-    ${isConcept ? `
-      <section class="wiki-intro-card is-loading" id="wiki-intro-card">
-        <div class="section-kicker"><span class="wiki-dot">W</span><span>${introLabel}</span></div>
-        <p class="drawer-copy" id="drawer-copy">${language === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…'}</p>
-      </section>
-    ` : `<p class="drawer-copy">${escapeHtml(node.description[language])}</p>`}
-    ${isConcept && (safety || resources) ? `<div class="section-divider"><span>${detailLabel}</span></div>` : ''}
-    ${safety}
+    ${conceptBody}
+    ${isConcept && !isStudy && (safety || resources) ? `<div class="section-divider"><span>${detailLabel}</span></div>` : ''}
+    ${isStudy ? '' : safety}
     ${mode === 'learn' && node.role === 'concept' ? `
       <section class="learn-card">
         <div><span>${language === 'it' ? 'Percorso' : 'Learning path'}</span><strong>${learnPos + 1} / ${conceptSequence.length}</strong></div>
         <div class="progress"><span style="width:${((learnPos + 1) / conceptSequence.length) * 100}%"></span></div>
         <div class="learn-actions"><button data-learn="prev" ${learnPos <= 0 ? 'disabled' : ''}>← ${language === 'it' ? 'Prima' : 'Previous'}</button><button data-learn="next" ${learnPos >= conceptSequence.length - 1 ? 'disabled' : ''}>${language === 'it' ? 'Avanti' : 'Next'} →</button></div>
       </section>` : ''}
-    ${resources}
+    ${isStudy ? '' : resources}
     ${wikiUrl ? `<a class="wiki-link" id="drawer-wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${language === 'it' ? 'Apri l’articolo completo' : 'Open full article'}</span><b>↗</b></a>` : ''}
   `;
   drawer.classList.add('open');
@@ -683,7 +702,49 @@ function renderDrawer(node) {
   drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, false)));
   drawer.querySelector('[data-learn="prev"]')?.addEventListener('click', () => stepLearn(-1));
   drawer.querySelector('[data-learn="next"]')?.addEventListener('click', () => stepLearn(1));
-  if (isConcept) void hydrateDrawer(node, language);
+  if (isStudy) void typesetMath(drawerContent);
+  else if (isConcept) void hydrateDrawer(node, language);
+}
+
+function renderStudyLesson(node, lang) {
+  const study = node.study;
+  const formulas = study.formulas || [];
+  const terms = study.terms || [];
+  const example = study.example;
+  const summary = study.summary?.[lang] || node.description?.[lang] || '';
+  const source = study.source?.[lang] || (lang === 'it' ? 'Notebook del corso' : 'Course notebook');
+
+  return `
+    <section class="study-intro-card">
+      <div class="section-kicker"><span class="study-dot">Σ</span><span>${escapeHtml(source)}</span></div>
+      <p class="drawer-copy">${escapeHtml(summary)}</p>
+    </section>
+    ${formulas.length ? `
+      <section class="study-section">
+        <p class="study-heading">${lang === 'it' ? 'Formula' : 'Formula'}</p>
+        <div class="formula-grid">${formulas.map((item) => `
+          <article class="formula-card">
+            <small>${escapeHtml(item.title?.[lang] || (lang === 'it' ? 'Formula' : 'Formula'))}</small>
+            <div class="math-display">\\[${escapeHtml(item.tex)}\\]</div>
+          </article>
+        `).join('')}</div>
+      </section>` : ''}
+    ${terms.length ? `
+      <section class="study-section">
+        <p class="study-heading">${lang === 'it' ? 'Significato dei termini' : 'Meaning of the terms'}</p>
+        <div class="term-list">${terms.map((item) => `
+          <div class="term-row"><span class="term-symbol">\\(${escapeHtml(item.symbol)}\\)</span><span>${escapeHtml(item.label?.[lang] || '')}</span></div>
+        `).join('')}</div>
+      </section>` : ''}
+    ${example ? `
+      <section class="study-section example-section">
+        <p class="study-heading">${escapeHtml(example.title?.[lang] || (lang === 'it' ? 'Esempio' : 'Example'))}</p>
+        <p class="study-example-copy">${escapeHtml(example.body?.[lang] || '')}</p>
+        ${example.tex ? `<div class="example-math">\\[${escapeHtml(example.tex)}\\]</div>` : ''}
+      </section>` : ''}
+    ${study.note?.[lang] ? `
+      <section class="study-note"><strong>${lang === 'it' ? 'Nota' : 'Note'}</strong><p>${escapeHtml(study.note[lang])}</p></section>` : ''}
+  `;
 }
 
 async function hydrateDrawer(node, lang) {
