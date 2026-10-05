@@ -1,134 +1,97 @@
 # Codex Atlas
 
-A dependency-free interactive radial knowledge map inspired by the visual grammar of the Cognitive Bias Codex.
+Codex Atlas is a lightweight, dependency-free web app for interactive radial knowledge maps. One shared renderer powers three independent sites from the same repository:
 
-The same repository now serves multiple content packs with one shared renderer:
+| Pack | Railway service | Environment variable |
+| --- | --- | --- |
+| Human Body | `human-body` | `CODEX_PACK=human-body` |
+| Finance | `finance` | `CODEX_PACK=finance` |
+| Home / Casa Pratica | `home` | `CODEX_PACK=home` |
 
-- `human-body` — Human Body Codex
-- `finance` — Finance Codex
-- `home` — Home Codex / Casa Pratica
+The UI includes Explore/Learn modes, IT/EN, Dark/Light themes, Wikipedia-first concept previews, search, pan/zoom, pinch-to-zoom and a mobile bottom sheet. Home concepts can also expose practical resources plus difficulty/risk metadata.
 
-## Run locally
+## Quick start
 
-Human Body (default):
-
-```bash
-npm run dev
-```
-
-Finance:
+Requires Node.js 20+.
 
 ```bash
-CODEX_PACK=finance npm run dev
-```
-
-Home:
-
-```bash
-CODEX_PACK=home npm run dev
+npm run dev:human-body
 ```
 
 Open `http://localhost:4173`.
 
-## Architecture
-
-- `index.html` — shared app shell
-- `src/app.js` — shared renderer, pan/zoom, Explore/Learn, search and Wikipedia previews
-- `src/styles.css` — shared visual system
-- `src/data/human-body.js` — Human Body pack
-- `src/data/finance.js` — Finance pack
-- `src/data/home.js` — Home pack
-- `public/images/human-body-center.webp` — Human Body center artwork
-- `public/images/finance-center.svg` — Finance center artwork
-- `public/images/home-center.svg` — Home center artwork
-- `server.mjs` — static server and runtime content-pack configuration
-
-No framework, no bundler, no database and no runtime dependency.
-
-## Runtime pack selection
-
-The server exposes `/runtime-config.js`, generated from `CODEX_PACK`.
-
-```text
-CODEX_PACK=human-body  -> Human Body Codex
-CODEX_PACK=finance     -> Finance Codex
-CODEX_PACK=home        -> Home Codex
-```
-
-If `CODEX_PACK` is omitted or invalid, `human-body` is used.
-
-## Railway: three sites, one repository
-
-Create three Railway services from the same GitHub repository.
-
-### Human Body service
-
-Environment variable:
-
-```text
-CODEX_PACK=human-body
-```
-
-### Finance service
-
-Environment variable:
-
-```text
-CODEX_PACK=finance
-```
-
-### Home service
-
-Environment variable:
-
-```text
-CODEX_PACK=home
-```
-
-All services use the included `railway.json` and start with `npm start`. Generate a different public domain for each service. Any future push to the shared GitHub repository can redeploy both services while keeping their different `CODEX_PACK` values.
-
-## Content
-
-Human Body contains 7 macro domains, 17 systems and 154 concepts.
-Finance contains 8 macro domains, 27 systems and 157 concepts covering foundations, accounting, corporate finance, markets, investing, portfolio construction, risk, derivatives, banking, personal finance, fintech and regulation.
-Home contains 8 macro domains, 29 systems and 174 concepts covering plumbing, electricity, HVAC, walls, woodworking, appliances, tools, safety and maintenance.
-
-## Interaction
-
-- Branches render below all text for readability.
-- Labels use translucent backplates where needed.
-- Explore popups stay centered and interactive, with Wikipedia introductions loaded first for concepts.
-- Mobile supports one-finger pan and two-finger pinch zoom.
-- Opening a node preserves the current viewport.
-- Node IDs are validated for uniqueness at startup.
-- The shared v10 design system uses a dark graphite UI, pack-specific accents, smoother wheel zoom and a mobile bottom sheet.
-
-
-## Multiple Codex services
-
-The same repository can power multiple Railway services. Set one environment variable per service:
-
-```text
-Human Body: CODEX_PACK=human-body
-Finance:    CODEX_PACK=finance
-Home:       CODEX_PACK=home
-```
-
-Local Home preview:
+Other packs:
 
 ```bash
-CODEX_PACK=home npm run dev
+npm run dev:finance
+npm run dev:home
 ```
 
-The Home pack also supports curated practical resources, difficulty/risk badges and professional-safety boundaries in the shared renderer.
+Run the syntax checks before pushing:
+
+```bash
+npm run check
+```
+
+## Repository at a glance
+
+```text
+codex-atlas/
+├── README.md
+├── index.html                 # browser shell and early theme bootstrap
+├── package.json               # local/start/check commands
+├── server.mjs                 # static server + CODEX_PACK runtime config
+├── railway.json               # current Railway config (legacy format)
+├── docs/
+│   ├── PROJECT.md             # concise project overview
+│   ├── ARCHITECTURE.md        # runtime flow and module responsibilities
+│   ├── CONTENT_PACKS.md       # data model and how to add a Codex
+│   ├── DEVELOPMENT.md         # local workflow and checks
+│   └── RAILWAY_CLI.md         # detailed Railway CLI operations
+├── public/
+│   └── images/
+│       ├── human-body/center.webp
+│       ├── finance/center.svg
+│       └── home/center.svg
+└── src/
+    ├── main.js                # browser entry point
+    ├── core/
+    │   ├── app.js             # renderer + UI state/interactions
+    │   ├── constants.js       # shared map geometry constants
+    │   ├── dom.js             # DOM/SVG helpers
+    │   ├── layout.js          # flattening, validation and radial layout
+    │   ├── viewport.js        # mouse/touch pan and zoom
+    │   └── wikipedia.js       # Wikipedia intro loading/fallback/cache
+    ├── packs/
+    │   ├── manifest.js        # supported pack IDs + default pack
+    │   ├── index.js           # pack registry
+    │   ├── human-body.js
+    │   ├── finance.js
+    │   └── home.js
+    └── styles/
+        ├── main.css           # stylesheet entry point
+        ├── base.css           # dark/default UI + responsive layout
+        └── light.css          # light-theme overrides
+```
+
+## Normal workflow
+
+```bash
+git add -A
+git commit -m "Describe the change"
+git push origin main
+```
+
+All three Railway services can deploy the same `main` branch while keeping different `CODEX_PACK` values.
 
 ## Documentation
 
-- [`docs/PROJECT.md`](docs/PROJECT.md) — short project overview and normal development flow.
-- [`docs/RAILWAY_CLI.md`](docs/RAILWAY_CLI.md) — detailed Railway CLI setup, domains, variables, deployment and troubleshooting.
+- [`docs/PROJECT.md`](docs/PROJECT.md) — what the project is and how the three sites relate.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how a request becomes a rendered Codex and what each module owns.
+- [`docs/CONTENT_PACKS.md`](docs/CONTENT_PACKS.md) — content schema, resources, risk metadata and adding a fourth pack.
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — local commands, checks and safe editing workflow.
+- [`docs/RAILWAY_CLI.md`](docs/RAILWAY_CLI.md) — detailed CLI setup, services, variables, domains, logs and troubleshooting.
 
-## Tema
+## Deployment note
 
-L’interfaccia condivisa supporta **Dark / Light theme** su tutti i pack. Dark è il default; il pulsante sole/luna nella top bar passa al tema chiaro originale. La preferenza viene salvata nel browser.
-
-- **IT / EN language switch** is available on desktop and mobile; the current language is reflected in the URL.
+`railway.json` is intentionally kept for the moment because the current services are already working with it. Railway reports this format as deprecated; migrate it separately with `railway config migrate` after verifying the three production services. See [`docs/RAILWAY_CLI.md`](docs/RAILWAY_CLI.md).

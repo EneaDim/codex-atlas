@@ -1,3 +1,4 @@
+import { DEFAULT_PACK_ID, isPackId } from './src/packs/manifest.js';
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -6,9 +7,8 @@ import { gzipSync } from 'node:zlib';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const port = Number(process.env.PORT || 4173);
-const allowedPacks = new Set(['human-body', 'finance', 'home']);
-const configuredPack = process.env.CODEX_PACK || 'human-body';
-const codexPack = allowedPacks.has(configuredPack) ? configuredPack : 'human-body';
+const configuredPack = process.env.CODEX_PACK || DEFAULT_PACK_ID;
+const codexPack = isPackId(configuredPack) ? configuredPack : DEFAULT_PACK_ID;
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',

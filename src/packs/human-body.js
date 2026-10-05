@@ -12,7 +12,7 @@ export const humanBody = {
     "en": "A dense visual map of human anatomy and physiology.",
     "it": "Una mappa visiva densa di anatomia e fisiologia umana."
   },
-  "centerImage": "/public/images/human-body-center.webp",
+  "centerImage": "/public/images/human-body/center.webp",
   "domains": [
     {
       "id": "foundations",

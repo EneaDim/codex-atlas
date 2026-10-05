@@ -27,7 +27,7 @@ export const finance = {
     en: 'A dense visual map of finance, markets, investing and risk.',
     it: 'Una mappa visiva densa di finanza, mercati, investimenti e rischio.',
   },
-  centerImage: '/public/images/finance-center.svg',
+  centerImage: '/public/images/finance/center.svg',
   domains: [
     D(
       'finance-foundations',
