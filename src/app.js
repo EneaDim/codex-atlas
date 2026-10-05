@@ -455,6 +455,7 @@ function renderChrome() {
   document.querySelectorAll('.mode-button').forEach((button) => {
     const active = button.dataset.mode === mode;
     button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
     if (button.dataset.mode === 'explore') button.textContent = language === 'it' ? 'Esplora' : 'Explore';
     else button.textContent = language === 'it' ? 'Impara' : 'Learn';
   });
