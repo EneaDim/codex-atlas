@@ -39,7 +39,7 @@ Useful checks:
 ```bash
 railway status
 railway environment list
-railway service status --all -e production
+railway service list -e production
 ```
 
 Railway services are environment-scoped at runtime. A service can exist in a project while its service instance is missing from the environment currently targeted by the CLI.
@@ -67,7 +67,7 @@ For scripts, prefer passing the environment explicitly:
 ## 4. Verify the three services
 
 ```bash
-railway service status --all -e production
+railway service list -e production
 ```
 
 The output should contain:
@@ -82,7 +82,7 @@ If one is missing, do not create duplicates immediately. First verify whether it
 
 ```bash
 railway environment list
-railway service status --all -e <environment-name>
+railway service list -e <environment-name>
 ```
 
 ## 5. Connect each service to GitHub
@@ -145,7 +145,7 @@ railway up --service home --environment production
 Check status:
 
 ```bash
-railway service status --all -e production
+railway service list -e production
 ```
 
 Check logs:
@@ -220,7 +220,7 @@ Run:
 ```bash
 railway status
 railway environment list
-railway service status --all -e production
+railway service list -e production
 ```
 
 Then force the environment when managing the domain:
@@ -236,8 +236,8 @@ railway domain -s home -e production
 If the error remains, check every environment:
 
 ```bash
-railway service status --all -e production
-railway service status --all -e staging
+railway service list -e production
+railway service list -e staging
 ```
 
 Use only environments that actually exist in `railway environment list`.
@@ -281,7 +281,7 @@ Project and services:
 
 ```bash
 railway status
-railway service status --all
+railway service list
 railway open
 ```
 

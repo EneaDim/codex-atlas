@@ -1,13 +1,20 @@
-import { humanBody } from './human-body.js';
 import { finance } from './finance.js';
 import { home } from './home.js';
-import { DEFAULT_PACK_ID } from './manifest.js';
+import { humanBody } from './human-body.js';
+
+export const DEFAULT_PACK_ID = 'human-body';
 
 export const PACKS = Object.freeze({
   'human-body': humanBody,
   finance,
   home,
 });
+
+export const PACK_IDS = Object.freeze(Object.keys(PACKS));
+
+export function isPackId(value) {
+  return Object.hasOwn(PACKS, value);
+}
 
 export function getPack(id = DEFAULT_PACK_ID) {
   return PACKS[id] ?? PACKS[DEFAULT_PACK_ID];

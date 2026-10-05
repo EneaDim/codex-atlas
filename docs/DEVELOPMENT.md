@@ -37,7 +37,7 @@ Before committing:
 npm run check
 ```
 
-This performs syntax validation on the server, core modules and all pack files.
+This performs syntax validation, validates all packs (localized titles, unique IDs and central artwork paths), and audits the repository for exact duplicate files or known legacy paths.
 
 For content work, also verify the intended pack in the browser and check:
 
@@ -73,7 +73,7 @@ The three Railway services can auto-deploy from the same branch.
 | change UI behavior | `src/core/app.js` |
 | dark/default appearance | `src/styles/base.css` |
 | light mode | `src/styles/light.css` |
-| runtime pack selection | `server.mjs`, `src/packs/manifest.js` |
+| runtime pack selection | `server.mjs`, `src/packs/registry.js` |
 | Railway operations | `docs/RAILWAY_CLI.md` |
 
 ## Cache while testing

@@ -22,21 +22,20 @@ codex-atlas/
 │   ├── ARCHITECTURE.md
 │   ├── CONTENT_PACKS.md
 │   ├── DEVELOPMENT.md
-│   ├── PROJECT.md
 │   └── RAILWAY_CLI.md
 │
 ├── public/
 │   └── images/
-│       ├── human-body/
-│       │   └── center.webp
-│       ├── finance/
-│       │   └── center.svg
-│       └── home/
-│           └── center.svg
+│       ├── human-body/center.webp
+│       ├── finance/center.svg
+│       └── home/center.svg
+│
+├── scripts/
+│   ├── audit.mjs
+│   └── validate.mjs
 │
 └── src/
     ├── main.js
-    │
     ├── core/
     │   ├── app.js
     │   ├── constants.js
@@ -44,14 +43,12 @@ codex-atlas/
     │   ├── layout.js
     │   ├── viewport.js
     │   └── wikipedia.js
-    │
     ├── packs/
-    │   ├── manifest.js
-    │   ├── index.js
+    │   ├── builders.js
+    │   ├── registry.js
     │   ├── human-body.js
     │   ├── finance.js
     │   └── home.js
-    │
     └── styles/
         ├── main.css
         ├── base.css
@@ -72,7 +69,7 @@ server.mjs
           src/main.js
              ↓
         src/core/app.js
-             ├─ src/packs/index.js
+             ├─ src/packs/registry.js
              ├─ src/core/layout.js
              ├─ src/core/viewport.js
              ├─ src/core/wikipedia.js
@@ -140,13 +137,17 @@ Loads and caches Wikipedia introductory extracts, including language fallback be
 
 Subject-specific content.
 
-- `manifest.js` — valid pack IDs and default pack.
-- `index.js` — maps pack IDs to datasets.
+- `registry.js` — the single source of truth for available packs, the default pack and pack lookup.
+- `builders.js` — small shared constructors used by compact data packs to avoid repeating object boilerplate.
 - `human-body.js` — Human Body content.
 - `finance.js` — Finance content.
 - `home.js` — Home / Casa Pratica content, practical metadata and resources.
 
-Pack files should contain **content**, not renderer logic.
+Pack files should contain **content**, not renderer logic. Pack IDs are registered only once, in `registry.js`.
+
+## `scripts/`
+
+Repository quality tooling. `validate.mjs` checks pack IDs, localized titles, duplicate node IDs and artwork paths; `audit.mjs` detects exact duplicate files and known legacy paths. Both run as part of `npm run check`.
 
 ## `src/styles/`
 
@@ -174,5 +175,18 @@ public/images/<pack-id>/center.<ext>
 | Change Wikipedia loading | `src/core/wikipedia.js` |
 | Change UI behavior | `src/core/app.js` |
 | Change appearance | `src/styles/` |
-| Change server/runtime pack selection | `server.mjs` |
+| Change server/runtime pack selection | `server.mjs`, `src/packs/registry.js` |
 | Change Railway deployment | Railway config + `docs/RAILWAY_CLI.md` |
+
+
+## Duplication policy
+
+Keep one canonical location for each concern:
+
+- subject content lives only in `src/packs/`;
+- each pack has one central artwork under `public/images/<pack-id>/`;
+- pack registration lives only in `src/packs/registry.js`;
+- content authoring guidance lives in `docs/CONTENT_PACKS.md`;
+- repository structure lives in this document.
+
+Do not keep legacy copies of moved files “just in case”; Git history is the backup.

@@ -1,4 +1,4 @@
-import { DEFAULT_PACK_ID, isPackId } from './src/packs/manifest.js';
+import { DEFAULT_PACK_ID, isPackId } from './src/packs/registry.js';
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';

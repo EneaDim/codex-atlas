@@ -1,41 +1,41 @@
-const R = (type, en, it, url, source) => ({ type, title: { en, it }, url, source });
-const PLUMBING = R("tutorial", "Practical plumbing repairs", "Riparazioni idrauliche pratiche", "https://www.thisoldhouse.com/plumbing/no-sweat-plumbing-repairs", "This Old House");
-const FAUCET = R("tutorial", "Faucets and drains repair guide", "Guida a rubinetti e scarichi", "https://www.thisoldhouse.com/how-to-repair-faucets-and-drains", "This Old House");
-const AERATOR = R("tutorial", "Replace a faucet aerator", "Sostituire un aeratore", "https://www.thisoldhouse.com/plumbing/how-to-replace-a-faucet-aerator", "This Old House");
-const CEI = R("official", "Residential electrical installation guidance", "Guida agli impianti elettrici residenziali", "https://ceimagazine.ceinorme.it/guida-cei-64-53-per-lintegrazione-e-la-predisposizione-degli-impianti-negli-edifici/", "CEI");
-const ELECTRICAL_SAFETY = R("safety", "Electrical safety for DIY", "Sicurezza elettrica nel fai da te", "https://www.electricalsafetyfirst.org.uk/safety-advice/home-and-people/diy-ers/", "Electrical Safety First");
-const SOCKET_SAFETY = R("safety", "Avoid overloading sockets", "Evitare il sovraccarico delle prese", "https://www.electricalsafetyfirst.org.uk/safety-advice/home-and-people/house-maintenance/overloading-sockets/", "Electrical Safety First");
-const HEATING = R("official", "Home heating guidance", "Guida al riscaldamento domestico", "https://www.efficienzaenergetica.enea.it/servizi-per/cittadini/interventi-di-efficienza-e-risparmio-energetico-nelle-abitazioni/impianti/riscaldamento.html", "ENEA");
-const COOLING = R("official", "Cooling and air-conditioning guidance", "Guida a raffrescamento e climatizzazione", "https://www.efficienzaenergetica.enea.it/servizi-per/cittadini/interventi-di-efficienza-e-risparmio-energetico-nelle-abitazioni/impianti/raffrescamento.html", "ENEA");
-const ENERGY = R("official", "OIKIA practical home-efficiency guide", "Guida pratica OIKIA per l’efficienza domestica", "https://www.efficienzaenergetica.enea.it/pubblicazioni/guida-pratica-oikia-meno-co2-dalla-tua-casa-per-una-nuova-cultura-dell-efficienza-energetiuca.html", "ENEA");
-const DRYWALL = R("tutorial", "How to patch drywall", "Come riparare il cartongesso", "https://www.thisoldhouse.com/walls/how-to-patch-drywall", "This Old House");
-const CAULK = R("tutorial", "How to caulk windows", "Come sigillare le finestre", "https://www.thisoldhouse.com/windows/how-to-caulk-windows", "This Old House");
-const TOOLS = R("manual", "Drills and drivers", "Trapani e avvitatori", "https://www.bosch-diy.com/it/it/elettroutensili/trapani-e-avvitatori", "Bosch DIY");
-const DRILLING = R("manual", "Drilling accessories and materials", "Accessori e materiali per foratura", "https://www.bosch-diy.com/it/it/catalogo-online-diy-ac/foratura", "Bosch DIY");
-const GAS = R("safety", "SICURO GAS — domestic gas safety", "SICURO GAS — sicurezza del gas domestico", "https://www.vigilfuoco.it/media/notizie/presentato-il-nuovo-manuale-sicuro-gas-un-utilizzo-sicuro-del-gas-domestico", "Vigili del Fuoco");
-const HOME_REPAIR = R("tutorial", "Common home repair questions", "Problemi comuni di manutenzione della casa", "https://www.thisoldhouse.com/basements/top-10-repair-questions", "This Old House");
+import { concept, domain, system } from './builders.js';
 
-const RESOURCE_INDEX = {
-  "plumbing": PLUMBING,
-  "faucet": FAUCET,
-  "aerator": AERATOR,
-  "cei": CEI,
-  "electrical_safety": ELECTRICAL_SAFETY,
-  "socket_safety": SOCKET_SAFETY,
-  "heating": HEATING,
-  "cooling": COOLING,
-  "energy": ENERGY,
-  "drywall": DRYWALL,
-  "caulk": CAULK,
-  "tools": TOOLS,
-  "drilling": DRILLING,
-  "gas": GAS,
-  "home_repair": HOME_REPAIR,
-};
-const resourceList = (keys = []) => keys.map((key) => RESOURCE_INDEX[key]).filter(Boolean);
-const C = (id, en, it, wikiEn, wikiIt, opts = {}) => ({ id, title: { en, it }, wiki: { en: wikiEn, it: wikiIt }, ...opts, resources: resourceList(opts.resources) });
-const S = (id, en, it, descEn, descIt, concepts, opts = {}) => ({ id, title: { en, it }, description: { en: descEn, it: descIt }, ...opts, resources: resourceList(opts.resources), concepts });
-const D = (id, en, it, descEn, descIt, color, systems, resources = []) => ({ id, title: { en, it }, description: { en: descEn, it: descIt }, color, resources: resourceList(resources), systems });
+const resource = (type, en, it, url, source) => ({
+  type,
+  title: { en, it },
+  url,
+  source,
+});
+
+const RESOURCES = Object.freeze({
+  plumbing: resource('tutorial', 'Practical plumbing repairs', 'Riparazioni idrauliche pratiche', 'https://www.thisoldhouse.com/plumbing/no-sweat-plumbing-repairs', 'This Old House'),
+  faucet: resource('tutorial', 'Faucets and drains repair guide', 'Guida a rubinetti e scarichi', 'https://www.thisoldhouse.com/how-to-repair-faucets-and-drains', 'This Old House'),
+  aerator: resource('tutorial', 'Replace a faucet aerator', 'Sostituire un aeratore', 'https://www.thisoldhouse.com/plumbing/how-to-replace-a-faucet-aerator', 'This Old House'),
+  cei: resource('official', 'Residential electrical installation guidance', 'Guida agli impianti elettrici residenziali', 'https://ceimagazine.ceinorme.it/guida-cei-64-53-per-lintegrazione-e-la-predisposizione-degli-impianti-negli-edifici/', 'CEI'),
+  electrical_safety: resource('safety', 'Electrical safety for DIY', 'Sicurezza elettrica nel fai da te', 'https://www.electricalsafetyfirst.org.uk/safety-advice/home-and-people/diy-ers/', 'Electrical Safety First'),
+  socket_safety: resource('safety', 'Avoid overloading sockets', 'Evitare il sovraccarico delle prese', 'https://www.electricalsafetyfirst.org.uk/safety-advice/home-and-people/house-maintenance/overloading-sockets/', 'Electrical Safety First'),
+  heating: resource('official', 'Home heating guidance', 'Guida al riscaldamento domestico', 'https://www.efficienzaenergetica.enea.it/servizi-per/cittadini/interventi-di-efficienza-e-risparmio-energetico-nelle-abitazioni/impianti/riscaldamento.html', 'ENEA'),
+  cooling: resource('official', 'Cooling and air-conditioning guidance', 'Guida a raffrescamento e climatizzazione', 'https://www.efficienzaenergetica.enea.it/servizi-per/cittadini/interventi-di-efficienza-e-risparmio-energetico-nelle-abitazioni/impianti/raffrescamento.html', 'ENEA'),
+  energy: resource('official', 'OIKIA practical home-efficiency guide', 'Guida pratica OIKIA per l’efficienza domestica', 'https://www.efficienzaenergetica.enea.it/pubblicazioni/guida-pratica-oikia-meno-co2-dalla-tua-casa-per-una-nuova-cultura-dell-efficienza-energetiuca.html', 'ENEA'),
+  drywall: resource('tutorial', 'How to patch drywall', 'Come riparare il cartongesso', 'https://www.thisoldhouse.com/walls/how-to-patch-drywall', 'This Old House'),
+  caulk: resource('tutorial', 'How to caulk windows', 'Come sigillare le finestre', 'https://www.thisoldhouse.com/windows/how-to-caulk-windows', 'This Old House'),
+  tools: resource('manual', 'Drills and drivers', 'Trapani e avvitatori', 'https://www.bosch-diy.com/it/it/elettroutensili/trapani-e-avvitatori', 'Bosch DIY'),
+  drilling: resource('manual', 'Drilling accessories and materials', 'Accessori e materiali per foratura', 'https://www.bosch-diy.com/it/it/catalogo-online-diy-ac/foratura', 'Bosch DIY'),
+  gas: resource('safety', 'SICURO GAS — domestic gas safety', 'SICURO GAS — sicurezza del gas domestico', 'https://www.vigilfuoco.it/media/notizie/presentato-il-nuovo-manuale-sicuro-gas-un-utilizzo-sicuro-del-gas-domestico', 'Vigili del Fuoco'),
+  home_repair: resource('tutorial', 'Common home repair questions', 'Problemi comuni di manutenzione della casa', 'https://www.thisoldhouse.com/basements/top-10-repair-questions', 'This Old House'),
+});
+
+const resolveResources = (keys = []) => keys.map((key) => RESOURCES[key]).filter(Boolean);
+const withResources = (extra = {}) => ({ ...extra, resources: resolveResources(extra.resources) });
+
+const C = (id, en, it, wikiEn, wikiIt, extra = {}) =>
+  concept(id, en, it, wikiEn, wikiIt, withResources(extra));
+
+const S = (id, en, it, descEn, descIt, concepts, extra = {}) =>
+  system(id, en, it, descEn, descIt, concepts, withResources(extra));
+
+const D = (id, en, it, descEn, descIt, color, systems, resources = []) =>
+  domain(id, en, it, descEn, descIt, color, systems, { resources: resolveResources(resources) });
 
 export const home = {
   id: 'home',
@@ -43,7 +43,6 @@ export const home = {
   subtitle: { en: 'A practical atlas of household systems, maintenance and safe DIY.', it: 'Un atlante pratico di impianti domestici, manutenzione e fai da te sicuro.' },
   centerLabel: { en: 'HOME', it: 'CASA' },
   centerImage: '/public/images/home/center.svg',
-  preferLocalDescriptions: false,
   resourceNote: { en: 'Practical links are curated from technical bodies, public agencies, manufacturers and established how-to publishers. High-risk work is marked for qualified professionals.', it: 'I link pratici sono selezionati da enti tecnici, agenzie pubbliche, produttori e fonti how-to consolidate. I lavori ad alto rischio sono indicati come attività da tecnico qualificato.' },
   domains: [
     D("plumbing-water", "Plumbing & Water", "Idraulica e Acqua", "Water supply, fixtures, drains and the everyday components that keep water moving safely through a home.", "Alimentazione idrica, rubinetteria, scarichi e componenti quotidiani che fanno circolare l’acqua in casa.", "#3589B8", [

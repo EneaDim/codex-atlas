@@ -85,18 +85,17 @@ High-risk content should explain systems and warning signs rather than turn prof
 Suppose the new pack is `economics`.
 
 1. Create `src/packs/economics.js`.
-2. Add `economics` to `PACK_IDS` in `src/packs/manifest.js`.
-3. Import/register it in `src/packs/index.js`.
-4. Add its artwork at `public/images/economics/center.svg` (or `.webp`).
-5. Set the pack's `centerImage` to that public path.
-6. Run `npm run check`.
-7. Test locally with:
+2. Import it and add it once to `PACKS` in `src/packs/registry.js`.
+3. Add its artwork at `public/images/economics/center.svg` (or `.webp`).
+4. Set the pack's `centerImage` to that public path.
+5. Run `npm run check`.
+6. Test locally with:
 
 ```bash
 CODEX_PACK=economics npm run dev
 ```
 
-8. On Railway create another service from the same repository and set:
+7. On Railway create another service from the same repository and set:
 
 ```text
 CODEX_PACK=economics

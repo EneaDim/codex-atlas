@@ -9,7 +9,10 @@
     "dev:human-body": "CODEX_PACK=human-body node server.mjs",
     "dev:finance": "CODEX_PACK=finance node server.mjs",
     "dev:home": "CODEX_PACK=home node server.mjs",
-    "check": "node --check server.mjs && node --check src/main.js && node --check src/core/app.js && node --check src/core/layout.js && node --check src/core/viewport.js && node --check src/core/wikipedia.js && node --check src/packs/index.js && node --check src/packs/human-body.js && node --check src/packs/finance.js && node --check src/packs/home.js",
+    "check": "npm run check:syntax && npm run validate && npm run audit",
+    "check:syntax": "node --check server.mjs && node --check src/main.js && node --check src/core/app.js && node --check src/core/layout.js && node --check src/core/viewport.js && node --check src/core/wikipedia.js && node --check src/packs/builders.js && node --check src/packs/registry.js && node --check src/packs/human-body.js && node --check src/packs/finance.js && node --check src/packs/home.js && node --check scripts/validate.mjs",
+    "validate": "node scripts/validate.mjs",
+    "audit": "node scripts/audit.mjs",
     "start": "node server.mjs"
   },
   "engines": {

@@ -1,23 +1,4 @@
-const C = (id, en, it, wikiEn = en, wikiIt = it) => ({
-  id,
-  title: { en, it },
-  wiki: { en: wikiEn, it: wikiIt },
-});
-
-const S = (id, en, it, descEn, descIt, concepts) => ({
-  id,
-  title: { en, it },
-  description: { en: descEn, it: descIt },
-  concepts,
-});
-
-const D = (id, en, it, descEn, descIt, color, systems) => ({
-  id,
-  title: { en, it },
-  description: { en: descEn, it: descIt },
-  color,
-  systems,
-});
+import { concept as C, domain as D, system as S } from './builders.js';
 
 export const finance = {
   id: 'finance',

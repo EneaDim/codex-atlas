@@ -1,4 +1,4 @@
-import { getPack } from '../packs/index.js';
+import { getPack } from '../packs/registry.js';
 import { RADII } from './constants.js';
 import { escapeHtml, delay, must, svgEl } from './dom.js';
 import { assertUniqueIds, buildLayout, flattenPack, polar } from './layout.js';
