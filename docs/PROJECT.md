@@ -1,73 +1,39 @@
 # Codex Atlas — Project Overview
 
-Codex Atlas is a dependency-free interactive radial knowledge map. One shared renderer powers multiple independent sites from the same GitHub repository.
+Codex Atlas is a dependency-free web application for interactive radial knowledge maps.
 
-## Current sites
+One shared renderer powers multiple independent Codex. The active subject is selected at runtime with the `CODEX_PACK` environment variable.
 
-| Railway service | `CODEX_PACK` | Site |
+## Current Codex
+
+| Railway service | `CODEX_PACK` | Live site |
 | --- | --- | --- |
-| `human-body` | `human-body` | Human Body Codex |
-| `finance` | `finance` | Finance Codex |
-| `home` | `home` | Home Codex / Casa Pratica |
+| `human-body` | `human-body` | https://codex-human-body.up.railway.app |
+| `finance` | `finance` | https://codex-finance.up.railway.app |
+| `home` | `home` | https://codex-home.up.railway.app |
 
-Each Railway service deploys the same repository and selects its content at runtime through the `CODEX_PACK` environment variable.
+## Main idea
 
-## Main files
+The application separates shared UI and interactions from subject-specific content. This makes it possible to add new Codex without copying the whole application.
 
-```text
-codex-atlas/
-├── index.html
-├── server.mjs
-├── package.json
-├── railway.json                 # legacy Railway config; migrate before 2026-12-01
-├── public/images/               # center artwork for each pack
-└── src/
-    ├── app.js                   # shared renderer and interactions
-    ├── styles.css               # shared visual system
-    └── data/
-        ├── human-body.js
-        ├── finance.js
-        └── home.js
-```
+For the complete repository layout and responsibilities of each file, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Local development
 
-Human Body:
-
 ```bash
-npm run dev
-```
-
-Finance:
-
-```bash
-CODEX_PACK=finance npm run dev
-```
-
-Home:
-
-```bash
-CODEX_PACK=home npm run dev
+npm run dev:human-body
+npm run dev:finance
+npm run dev:home
 ```
 
 Open `http://localhost:4173`.
 
-## Deployment model
+## Production workflow
 
-The preferred production flow is:
+All three Railway services use the same GitHub repository and `main` branch:
 
 ```text
 local changes → git commit → git push origin main → GitHub → Railway auto-deploy
 ```
 
-All three Railway services point to the same GitHub repository and `main` branch. Their only required difference is `CODEX_PACK`.
-
-## Normal update workflow
-
-```bash
-git add -A
-git commit -m "Update Codex Atlas"
-git push origin main
-```
-
-No database, build framework, or separate repository is required for each Codex.
+Each service selects its content through its own `CODEX_PACK` variable.
