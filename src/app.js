@@ -17,6 +17,7 @@ const packs = { 'human-body': humanBody, finance, home };
 const requestedPack = window.__CODEX_PACK__ || 'human-body';
 const pack = packs[requestedPack] || humanBody;
 document.documentElement.dataset.codexPack = pack.id;
+let theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 const flat = flattenPack(pack);
 assertUniqueIds(flat);
 const nodeById = new Map(flat.map((node) => [node.id, node]));
@@ -48,6 +49,7 @@ app.innerHTML = `
           <button class="mode-button" data-mode="learn">Learn</button>
         </div>
         <button class="round-button" id="search-toggle" aria-label="Search">⌕</button>
+        <button class="round-button theme-button" id="theme-toggle" aria-label="Switch theme">☼</button>
         <button class="round-button language-button" id="language-toggle">IT</button>
         <button class="round-button" id="about-toggle" aria-label="About">i</button>
       </div>
@@ -100,6 +102,7 @@ const searchPanel = must('search-panel');
 const searchInput = must('search-input');
 const searchResults = must('search-results');
 const searchToggle = must('search-toggle');
+const themeToggle = must('theme-toggle');
 const languageToggle = must('language-toggle');
 const aboutDialog = must('about-dialog');
 const zoomLabel = must('zoom-label');
@@ -448,6 +451,7 @@ function renderChrome() {
     : 'Hover concepts to preview · click to open · drag and use the wheel to explore';
   searchInput.placeholder = language === 'it' ? 'Cerca un concetto…' : 'Search a concept…';
   languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
+  renderThemeControl();
   svg.setAttribute('aria-label', pack.title[language]);
   must('svg-desc').textContent = pack.subtitle[language];
   must('reset-view').textContent = language === 'it' ? 'Reimposta' : 'Reset view';
@@ -486,6 +490,10 @@ function bindUi() {
     hideHover();
     renderAll();
     syncUrl();
+  });
+
+  themeToggle.addEventListener('click', () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   });
 
   searchToggle.addEventListener('click', (event) => {
@@ -528,6 +536,27 @@ function bindUi() {
     hoverCardHovered = false;
     scheduleHoverHide(180);
   });
+}
+
+function setTheme(nextTheme) {
+  theme = nextTheme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('codex-theme', theme); } catch {}
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'light' ? '#fbfcfc' : '#0b0d11');
+  renderThemeControl();
+}
+
+function renderThemeControl() {
+  if (!themeToggle) return;
+  const isDark = theme === 'dark';
+  themeToggle.textContent = isDark ? '☼' : '☾';
+  const label = language === 'it'
+    ? (isDark ? 'Passa alla modalità chiara' : 'Passa alla modalità scura')
+    : (isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  themeToggle.setAttribute('aria-label', label);
+  themeToggle.setAttribute('title', label);
+  themeToggle.setAttribute('aria-pressed', isDark ? 'false' : 'true');
 }
 
 function showHover(node) {
