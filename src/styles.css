@@ -499,7 +499,8 @@ kbd { border: 1px solid var(--line); border-bottom-color: var(--line-strong); bo
     transform: scale(.97);
     background: rgba(var(--accent-rgb), .16);
   }
-  .round-button { width: 34px; height: 34px; }
+  .round-button { width: 36px; height: 36px; min-width: 36px; min-height: 36px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .language-button { display: inline-grid; place-items: center; font-size: 10px; font-weight: 760; letter-spacing: .06em; }
   #about-toggle { display: none; }
   .search-panel { top: calc(max(10px, env(safe-area-inset-top)) + 112px); right: 10px; width: calc(100vw - 20px); }
   .search-box { min-height: 50px; }
@@ -541,10 +542,19 @@ kbd { border: 1px solid var(--line); border-bottom-color: var(--line-strong); bo
 }
 
 @media (max-width: 420px) {
-  .language-button { display: none; }
-  .brand { max-width: calc(100vw - 100px); }
-  .brand strong { max-width: 122px; }
+  .brand { max-width: calc(100vw - 145px); }
+  .brand strong { max-width: 105px; }
+  .topbar-actions { flex-shrink: 0; }
+  .round-button { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
+  .language-button { display: inline-grid; }
   .mode-button { min-width: 92px; padding-inline: 13px; }
+}
+
+@media (max-width: 350px) {
+  .brand { max-width: 132px; }
+  .brand strong { max-width: 88px; }
+  .topbar-actions { gap: 1px; padding: 3px; }
+  .round-button { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

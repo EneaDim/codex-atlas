@@ -451,6 +451,8 @@ function renderChrome() {
     : 'Hover concepts to preview · click to open · drag and use the wheel to explore';
   searchInput.placeholder = language === 'it' ? 'Cerca un concetto…' : 'Search a concept…';
   languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
+  languageToggle.setAttribute('aria-label', language === 'it' ? 'Passa all’inglese' : 'Switch to Italian');
+  languageToggle.setAttribute('title', language === 'it' ? 'English' : 'Italiano');
   renderThemeControl();
   svg.setAttribute('aria-label', pack.title[language]);
   must('svg-desc').textContent = pack.subtitle[language];

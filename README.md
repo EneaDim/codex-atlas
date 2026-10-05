@@ -126,3 +126,9 @@ The Home pack also supports curated practical resources, difficulty/risk badges 
 
 - [`docs/PROJECT.md`](docs/PROJECT.md) — short project overview and normal development flow.
 - [`docs/RAILWAY_CLI.md`](docs/RAILWAY_CLI.md) — detailed Railway CLI setup, domains, variables, deployment and troubleshooting.
+
+## Tema
+
+L’interfaccia condivisa supporta **Dark / Light theme** su tutti i pack. Dark è il default; il pulsante sole/luna nella top bar passa al tema chiaro originale. La preferenza viene salvata nel browser.
+
+- **IT / EN language switch** is available on desktop and mobile; the current language is reflected in the URL.
