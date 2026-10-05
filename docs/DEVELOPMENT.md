@@ -79,3 +79,16 @@ The three Railway services can auto-deploy from the same branch.
 ## Cache while testing
 
 If a browser shows an old version after deployment, use a hard refresh or a private tab. Static images use longer cache headers; HTML/JS/CSS use revalidation/no-cache behavior.
+
+
+### Repository hygiene
+
+The canonical runtime is JavaScript-only. Run:
+
+```bash
+npm run audit
+```
+
+The audit rejects exact duplicate files, known legacy paths and any `.ts` file under `src/`.
+This prevents old prototypes from silently coexisting with the active implementation.
+

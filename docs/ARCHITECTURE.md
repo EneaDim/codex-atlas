@@ -55,6 +55,18 @@ codex-atlas/
         └── light.css
 ```
 
+
+## Source-language policy
+
+The current application runtime is intentionally **JavaScript-only**.
+
+Canonical source files live under `src/` as `.js` modules. Old TypeScript prototypes such as
+`src/main.ts`, `src/content/`, `src/core/model.ts`, `src/core/radial.ts`,
+`src/core/viewport.ts` and `src/core/wikipedia.ts` are legacy and must not coexist with the
+current implementation.
+
+`npm run audit` enforces this rule and fails if TypeScript source reappears under `src/`.
+
 ## Runtime flow
 
 ```text

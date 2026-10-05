@@ -18,6 +18,13 @@ const legacyPaths = [
   'src/content/human-body.js',
   'src/content/finance.js',
   'src/content/home.js',
+  'src/content/humanBody.ts',
+  'src/content/types.ts',
+  'src/core/model.ts',
+  'src/core/radial.ts',
+  'src/core/viewport.ts',
+  'src/core/wikipedia.ts',
+  'src/main.ts',
 ];
 
 async function walk(directory) {
@@ -41,6 +48,9 @@ for (const file of files) {
 }
 
 const duplicates = [...byHash.values()].filter((paths) => paths.length > 1);
+const sourceTypeScript = files
+  .map((file) => relative(root, file))
+  .filter((path) => path.startsWith('src/') && path.endsWith('.ts'));
 const stale = [];
 for (const path of legacyPaths) {
   try {
@@ -48,7 +58,7 @@ for (const path of legacyPaths) {
   } catch {}
 }
 
-if (duplicates.length || stale.length) {
+if (duplicates.length || stale.length || sourceTypeScript.length) {
   if (duplicates.length) {
     console.error('Exact duplicate files:');
     duplicates.forEach((paths) => console.error(`  - ${paths.join(' = ')}`));
@@ -56,6 +66,10 @@ if (duplicates.length || stale.length) {
   if (stale.length) {
     console.error('Legacy paths that should not exist:');
     stale.forEach((path) => console.error(`  - ${path}`));
+  }
+  if (sourceTypeScript.length) {
+    console.error('Unexpected TypeScript source in the canonical JavaScript runtime:');
+    sourceTypeScript.forEach((path) => console.error(`  - ${path}`));
   }
   process.exit(1);
 }
