@@ -2,11 +2,23 @@
 
 This document explains how Codex Atlas is organized and where each responsibility lives.
 
+## Live Codex
+
+| Pack | Site |
+| --- | --- |
+| `human-body` | https://codex-human-body.up.railway.app |
+| `finance` | https://codex-finance.up.railway.app |
+| `home` | https://codex-home.up.railway.app |
+| `statistics` | https://codex-statistics.up.railway.app |
+| `climate` | https://codex-climate.up.railway.app |
+| `survival` | https://codex-survival.up.railway.app |
+| `nutrition` | https://codex-nutrition.up.railway.app |
+
 ## Design principle
 
 > **One renderer, many content packs.**
 
-Human Body, Finance, Home and Statistics share the same application code. A new Codex should normally be added as a new pack, not as a copy of the UI.
+Human Body, Finance, Home, Statistics, Climate, Survival and Nutrition share the same application code. A new Codex should normally be added as a new pack, not as a copy of the UI.
 
 ## Repository map
 
@@ -17,12 +29,15 @@ codex-atlas/
 ├── package.json
 ├── server.mjs
 ├── railway.json
+├── release.sh
 │
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── CONTENT_PACKS.md
 │   ├── DEVELOPMENT.md
-│   └── RAILWAY_CLI.md
+│   ├── RELEASE.md
+│   ├── RAILWAY_CLI.md
+│   └── STATISTICS_COURSE.md
 │
 ├── public/
 │   └── images/
@@ -30,7 +45,10 @@ codex-atlas/
 │       ├── finance/center.svg
 │       ├── home/
 │       │   └── center.svg
-│       └── statistics/center.svg
+│       ├── statistics/center.svg
+│       ├── climate/center.svg
+│       ├── survival/center.svg
+│       └── nutrition/center.svg
 │
 ├── scripts/
 │   ├── audit.mjs
@@ -52,7 +70,10 @@ codex-atlas/
     │   ├── human-body.js
     │   ├── finance.js
     │   ├── home.js
-    │   └── statistics.js
+    │   ├── statistics.js
+    │   ├── climate.js
+    │   ├── survival.js
+    │   └── nutrition.js
     └── styles/
         ├── main.css
         ├── base.css
@@ -116,6 +137,9 @@ npm run dev:human-body
 npm run dev:finance
 npm run dev:home
 npm run dev:statistics
+npm run dev:climate
+npm run dev:survival
+npm run dev:nutrition
 npm run check
 ```
 
@@ -165,6 +189,9 @@ Subject-specific content.
 - `finance.js` — Finance content.
 - `home.js` — Home / Casa Pratica content, practical metadata and resources.
 - `statistics.js` — Statistics course map with short explanations, formulas, term legends and worked examples.
+- `climate.js` — Climate system, physical climate science, impacts, mitigation and adaptation.
+- `survival.js` — Preparedness, shelter, water, navigation, first aid and emergency principles.
+- `nutrition.js` — Nutrients, digestion, metabolism, dietary patterns, food safety and nutrition evidence.
 
 Pack files should contain **content**, not renderer logic. Pack IDs are registered only once, in `registry.js`.
 

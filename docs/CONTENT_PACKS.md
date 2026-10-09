@@ -2,6 +2,18 @@
 
 A content pack is a JavaScript object consumed by the shared radial renderer.
 
+## Current packs
+
+| Pack | Focus | Live site |
+| --- | --- | --- |
+| `human-body` | Human anatomy and physiology | https://codex-human-body.up.railway.app |
+| `finance` | Finance, markets and banking | https://codex-finance.up.railway.app |
+| `home` | Practical home systems and maintenance | https://codex-home.up.railway.app |
+| `statistics` | Politecnico statistics course | https://codex-statistics.up.railway.app |
+| `climate` | Climate system and climate change | https://codex-climate.up.railway.app |
+| `survival` | Preparedness and survival principles | https://codex-survival.up.railway.app |
+| `nutrition` | Nutrition science and food safety | https://codex-nutrition.up.railway.app |
+
 ## Pack shape
 
 ```js
@@ -139,7 +151,13 @@ Suppose the new pack is `economics`.
 CODEX_PACK=economics npm run dev
 ```
 
-7. On Railway create another service from the same repository and set:
+7. Use the release helper:
+
+```bash
+./release.sh economics
+```
+
+   or perform the Railway steps manually and set:
 
 ```text
 CODEX_PACK=economics

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <radialGradient id="g" cx="50%" cy="44%" r="56%"><stop offset="0" stop-color="#6ed0ff"/><stop offset=".55" stop-color="#267bc8"/><stop offset="1" stop-color="#123352"/></radialGradient>
+  <linearGradient id="a" x1="0" x2="1"><stop stop-color="#9cecff" stop-opacity=".85"/><stop offset="1" stop-color="#7c7cff" stop-opacity=".18"/></linearGradient>
+  <filter id="s"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<circle cx="256" cy="256" r="166" fill="#071019" stroke="#8bd8ff" stroke-opacity=".28" stroke-width="2"/>
+<circle cx="256" cy="256" r="145" fill="url(#g)"/>
+<path d="M180 152c34-27 80-34 116-19 17 7 22 20 14 31-10 13-31 10-44 18-15 9-16 27-31 36-22 13-47-4-68 6-18 9-31 28-52 27-10-44 13-77 65-99z" fill="#74c98a" opacity=".94"/>
+<path d="M304 226c31-10 67 4 83 32 15 26 8 61-11 82-17 18-39 14-55 27-16 14-19 34-43 39-27 5-52-13-64-36-8-17 1-34 20-37 17-2 34 6 49-4 13-9 11-25 1-36-11-12-27-19-27-37 0-14 18-25 47-30z" fill="#61b97d"/>
+<path d="M122 266c13 7 22 21 36 27 14 7 31 5 43 16 17 16 7 40-10 51-20 13-43 6-57-11-16-19-19-53-12-83z" fill="#91d59d"/>
+<path d="M118 225c23-10 45-9 64 4M319 160c28 3 51 16 68 36M326 353c-23 17-50 24-77 21" fill="none" stroke="#dff8ff" stroke-opacity=".72" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="256" cy="256" rx="184" ry="86" fill="none" stroke="url(#a)" stroke-width="5" transform="rotate(-18 256 256)" opacity=".85"/>
+<ellipse cx="256" cy="256" rx="190" ry="112" fill="none" stroke="#6ed0ff" stroke-opacity=".18" stroke-width="3" transform="rotate(28 256 256)"/>
+<circle cx="389" cy="123" r="25" fill="#ffd45f"/><g stroke="#ffd45f" stroke-width="4" stroke-linecap="round">
+<path d="M389 80v-15M389 181v-15M346 123h-15M447 123h-15M359 93l-11-11M430 164l-11-11M419 93l11-11M348 164l11-11"/></g>
+<path d="M147 119c0-19 17-34 37-34 17 0 31 10 36 24 4-2 9-3 14-3 16 0 29 11 29 25 0 15-13 27-30 27h-72c-18 0-32-12-32-27 0-7 3-11 18-12z" fill="#d9f4ff" opacity=".85"/>
+<circle cx="256" cy="256" r="207" fill="none" stroke="#7ad3ff" stroke-opacity=".12" stroke-width="2"/>
+</svg>

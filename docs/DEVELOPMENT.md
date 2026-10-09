@@ -20,6 +20,9 @@ npm run dev:finance
 ```bash
 npm run dev:home
 npm run dev:statistics
+npm run dev:climate
+npm run dev:survival
+npm run dev:nutrition
 ```
 
 Each command serves `http://localhost:4173`. Run one at a time unless you explicitly provide different `PORT` values.
@@ -60,7 +63,7 @@ git commit -m "Describe the change"
 git push origin main
 ```
 
-The three Railway services can auto-deploy from the same branch.
+All Railway Codex services can auto-deploy from the same branch.
 
 ## Where to make a change
 
@@ -108,3 +111,8 @@ When changing shared navigation, test all packs in both themes and on desktop/mo
 - Learn opens at the folder root and drills down domain → system → concept;
 - concept details, Wikipedia/course formulas and mobile bottom sheet still work.
 
+
+
+## Railway release helper
+
+For new services or local-to-Railway releases, use `./release.sh <pack>` and see [`RELEASE.md`](RELEASE.md).

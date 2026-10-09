@@ -11,7 +11,10 @@ Current production setup:
 | `human-body` | `human-body` | https://codex-human-body.up.railway.app |
 | `finance` | `finance` | https://codex-finance.up.railway.app |
 | `home` | `home` | https://codex-home.up.railway.app |
-| `statistics` | `statistics` | `https://codex-statistics.up.railway.app` once created |
+| `statistics` | `statistics` | https://codex-statistics.up.railway.app |
+| `climate` | `climate` | https://codex-climate.up.railway.app |
+| `survival` | `survival` | https://codex-survival.up.railway.app |
+| `nutrition` | `nutrition` | https://codex-nutrition.up.railway.app |
 
 All services use:
 
@@ -21,6 +24,29 @@ Branch:            main
 Environment:       production
 Start command:     npm start
 ```
+
+---
+
+## Automated release helper
+
+For normal creation/deployment of a new Codex service, the preferred workflow is now:
+
+```bash
+./release.sh <pack>
+```
+
+Examples:
+
+```bash
+./release.sh climate
+./release.sh climate survival nutrition
+```
+
+The script validates the repository, creates missing Railway services, connects the shared GitHub source, sets `CODEX_PACK`, deploys the current local working tree, waits for deployment, creates a public domain and attempts to rename it to `codex-<pack>.up.railway.app`.
+
+It intentionally leaves Git commit/push to you afterwards.
+
+See [`RELEASE.md`](RELEASE.md) for the compact guide. The manual commands below remain useful for troubleshooting and for understanding every Railway step.
 
 ---
 
@@ -211,6 +237,9 @@ human-body
 finance
 home
 statistics
+climate
+survival
+nutrition
 ```
 
 **What this does:**  
@@ -492,6 +521,9 @@ railway variable set CODEX_PACK=human-body -s human-body -e production
 railway variable set CODEX_PACK=finance -s finance -e production
 railway variable set CODEX_PACK=home -s home -e production
 railway variable set CODEX_PACK=statistics -s statistics -e production
+railway variable set CODEX_PACK=climate -s climate -e production
+railway variable set CODEX_PACK=survival -s survival -e production
+railway variable set CODEX_PACK=nutrition -s nutrition -e production
 ```
 
 Verify them:
@@ -501,6 +533,9 @@ railway variable list -s human-body -e production --kv
 railway variable list -s finance -e production --kv
 railway variable list -s home -e production --kv
 railway variable list -s statistics -e production --kv
+railway variable list -s climate -e production --kv
+railway variable list -s survival -e production --kv
+railway variable list -s nutrition -e production --kv
 ```
 
 ---
@@ -514,6 +549,9 @@ railway domain list -s human-body -e production
 railway domain list -s finance -e production
 railway domain list -s home -e production
 railway domain list -s statistics -e production
+railway domain list -s climate -e production
+railway domain list -s survival -e production
+railway domain list -s nutrition -e production
 ```
 
 Expected naming convention:
@@ -523,6 +561,9 @@ https://codex-human-body.up.railway.app
 https://codex-finance.up.railway.app
 https://codex-home.up.railway.app
 https://codex-statistics.up.railway.app
+https://codex-climate.up.railway.app
+https://codex-survival.up.railway.app
+https://codex-nutrition.up.railway.app
 ```
 
 ---
@@ -731,26 +772,15 @@ Keep infrastructure migration separate from adding a new Codex whenever possible
 
 ## 14. Recommended production state
 
-```text
-Railway project: Codex Atlas
-Environment:     production
-
-human-body
-  CODEX_PACK=human-body
-  https://codex-human-body.up.railway.app
-
-finance
-  CODEX_PACK=finance
-  https://codex-finance.up.railway.app
-
-home
-  CODEX_PACK=home
-  https://codex-home.up.railway.app
-
-statistics
-  CODEX_PACK=statistics
-  https://codex-statistics.up.railway.app
-```
+| Service | `CODEX_PACK` | Live site |
+| --- | --- | --- |
+| `human-body` | `human-body` | https://codex-human-body.up.railway.app |
+| `finance` | `finance` | https://codex-finance.up.railway.app |
+| `home` | `home` | https://codex-home.up.railway.app |
+| `statistics` | `statistics` | https://codex-statistics.up.railway.app |
+| `climate` | `climate` | https://codex-climate.up.railway.app |
+| `survival` | `survival` | https://codex-survival.up.railway.app |
+| `nutrition` | `nutrition` | https://codex-nutrition.up.railway.app |
 
 The exact Railway-provided hostname depends on global domain availability.
 
