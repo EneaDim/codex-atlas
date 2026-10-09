@@ -98,3 +98,13 @@ This prevents old prototypes from silently coexisting with the active implementa
 ## Statistics course pack
 
 `CODEX_PACK=statistics` uses the six supplied course notebooks as its source. Formula cards use LaTeX rendered by MathJax in the browser.
+### Interaction regression checklist
+
+When changing shared navigation, test all packs in both themes and on desktop/mobile:
+
+- deep wheel/pinch zoom reaches 800%;
+- dense concept leaves remain individually clickable;
+- domain and system nodes open descendant lists;
+- Learn opens at the folder root and drills down domain → system → concept;
+- concept details, Wikipedia/course formulas and mobile bottom sheet still work.
+

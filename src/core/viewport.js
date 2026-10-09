@@ -6,7 +6,7 @@ export function createViewportController(svgElement, viewportElement, onScale) {
   let x = 0;
   let y = 0;
   const minScale = 0.58;
-  const maxScale = 4.2;
+  const maxScale = 8;
 
   const pointers = new Map();
   let panGesture = null;

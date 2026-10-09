@@ -267,3 +267,26 @@
 :root[data-theme="light"] .study-example-copy,
 :root[data-theme="light"] .study-note p { color: #4f555a; }
 :root[data-theme="light"] .study-note strong { color: #303438; }
+
+
+/* Hierarchy browser / Learn folders */
+:root[data-theme="light"] .hierarchy-group,
+:root[data-theme="light"] .hierarchy-leaf,
+:root[data-theme="light"] .learn-folder,
+:root[data-theme="light"] .learn-back-folder,
+:root[data-theme="light"] .learn-sibling-nav button {
+  border-color: var(--line);
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 7px 24px rgba(40,42,48,.045);
+}
+:root[data-theme="light"] .hierarchy-system strong,
+:root[data-theme="light"] .hierarchy-leaf,
+:root[data-theme="light"] .folder-copy strong,
+:root[data-theme="light"] .learn-back-folder strong { color: #303438; }
+:root[data-theme="light"] .hierarchy-system:hover,
+:root[data-theme="light"] .hierarchy-leaf:hover,
+:root[data-theme="light"] .learn-folder:hover,
+:root[data-theme="light"] .learn-back-folder:hover,
+:root[data-theme="light"] .learn-sibling-nav button:hover { background: rgba(var(--accent-rgb), .07); }
+:root[data-theme="light"] .folder-icon { background: rgba(var(--accent-rgb), .08); }
+:root[data-theme="light"] .learn-folder::after { opacity: .55; }

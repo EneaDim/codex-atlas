@@ -13,14 +13,19 @@ let theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark
 const flat = flattenPack(pack);
 assertUniqueIds(flat);
 const nodeById = new Map(flat.map((node) => [node.id, node]));
+const childrenByParent = new Map();
+for (const node of flat) {
+  const key = node.parentId ?? '__root__';
+  const children = childrenByParent.get(key) ?? [];
+  children.push(node);
+  childrenByParent.set(key, children);
+}
 const layout = buildLayout(pack);
 const layoutById = new Map(layout.map((entry) => [entry.id, entry]));
-const conceptSequence = flat.filter((node) => node.role === 'concept');
 
 let language = new URLSearchParams(location.search).get('lang') === 'it' ? 'it' : 'en';
 let mode = new URLSearchParams(location.search).get('mode') === 'learn' ? 'learn' : 'explore';
 let selectedId = new URLSearchParams(location.search).get('node') ?? '';
-let learnIndex = Math.max(0, conceptSequence.findIndex((node) => node.id === selectedId));
 let hoverVersion = 0;
 let hoverTimer;
 let hoverNodeId = '';
@@ -128,16 +133,16 @@ function renderMap() {
     const node = nodeById.get(entry.id);
     if (!node) continue;
 
-    const branchGroup = interactiveGroup(node, 'branch-group');
+    const branchGroup = interactiveGroup(node, 'branch-group', false);
     appendBranch(branchGroup, domainTrunkPath(entry), 'domain-trunk');
     branchLayer.append(branchGroup);
 
     const [x, y] = polar(RADII.domain, entry.angle);
-    const markerGroup = interactiveGroup(node, 'marker-group');
+    const markerGroup = interactiveGroup(node, 'marker-group', false);
     markerGroup.append(svgEl('circle', { cx: x, cy: y, r: 4.2, class: 'domain-node-dot' }));
     markerLayer.append(markerGroup);
 
-    const labelGroup = interactiveGroup(node, 'label-group');
+    const labelGroup = interactiveGroup(node, 'label-group', true);
     appendInnerLabel(labelGroup, node.title[language], x, y, entry.angle, 'domain-label');
     labelLayer.append(labelGroup);
   }
@@ -147,16 +152,16 @@ function renderMap() {
     const parent = layoutById.get(entry.parentId);
     if (!node || !parent) continue;
 
-    const branchGroup = interactiveGroup(node, 'branch-group');
+    const branchGroup = interactiveGroup(node, 'branch-group', false);
     appendBranch(branchGroup, hierarchicalPath(parent, entry), 'system-branch');
     branchLayer.append(branchGroup);
 
     const [x, y] = polar(RADII.system, entry.angle);
-    const markerGroup = interactiveGroup(node, 'marker-group');
+    const markerGroup = interactiveGroup(node, 'marker-group', false);
     markerGroup.append(svgEl('circle', { cx: x, cy: y, r: 3, class: 'system-node-dot' }));
     markerLayer.append(markerGroup);
 
-    const labelGroup = interactiveGroup(node, 'label-group');
+    const labelGroup = interactiveGroup(node, 'label-group', true);
     appendInnerLabel(labelGroup, node.title[language], x, y, entry.angle, 'system-label');
     labelLayer.append(labelGroup);
   }
@@ -166,16 +171,19 @@ function renderMap() {
     const parent = layoutById.get(entry.parentId);
     if (!node || !parent) continue;
 
-    const branchGroup = interactiveGroup(node, 'branch-group');
+    const branchGroup = interactiveGroup(node, 'branch-group', false);
     appendBranch(branchGroup, hierarchicalPath(parent, entry), 'concept-branch');
     branchLayer.append(branchGroup);
 
     const [x, y] = polar(RADII.concept, entry.angle);
-    const markerGroup = interactiveGroup(node, 'marker-group');
-    markerGroup.append(svgEl('circle', { cx: x, cy: y, r: 2.65, class: 'leaf-dot' }));
+    const markerGroup = interactiveGroup(node, 'marker-group', false);
+    markerGroup.append(
+      svgEl('circle', { cx: x, cy: y, r: 8.5, class: 'concept-node-hit' }),
+      svgEl('circle', { cx: x, cy: y, r: 2.65, class: 'leaf-dot' }),
+    );
     markerLayer.append(markerGroup);
 
-    const labelGroup = interactiveGroup(node, 'label-group');
+    const labelGroup = interactiveGroup(node, 'label-group', true);
     appendLeafLabel(labelGroup, node.title[language], entry.angle);
     labelLayer.append(labelGroup);
   }
@@ -184,7 +192,7 @@ function renderMap() {
   for (const entry of layout.filter((e) => e.role === 'domain')) {
     const node = nodeById.get(entry.id);
     if (!node) continue;
-    const group = interactiveGroup(node, 'domain-callout-group label-group');
+    const group = interactiveGroup(node, 'domain-callout-group label-group', true);
     appendDomainCallout(group, node, entry);
     calloutLayer.append(group);
   }
@@ -209,16 +217,17 @@ function appendCenter() {
   text.textContent = pack.centerLabel?.[language] || pack.title[language].toUpperCase();
   center.append(text);
   center.addEventListener('click', () => {
-    closeDrawer();
     hideHover();
     viewportController.reset();
+    if (mode === 'learn') renderLearnRoot();
+    else closeDrawer();
   });
   viewport.append(center);
 }
 
 function appendBranch(group, d, className) {
   const visible = svgEl('path', { d, class: `branch ${className}` });
-  const hit = svgEl('path', { d, class: 'branch-hit' });
+  const hit = svgEl('path', { d, class: `branch-hit ${className}-hit` });
   group.append(visible, hit);
 }
 
@@ -303,10 +312,10 @@ function appendDomainCallout(group, node, entry) {
   });
 }
 
-function interactiveGroup(node, extraClass = '') {
+function interactiveGroup(node, extraClass = '', focusable = true) {
   const group = svgEl('g', {
     class: `node-group role-${node.role} domain-${node.domainIndex} ${extraClass}`.trim(),
-    tabindex: 0,
+    tabindex: focusable ? 0 : -1,
     role: 'button',
     'aria-label': node.title[language],
   });
@@ -435,11 +444,11 @@ function renderChrome() {
   must('brand-kicker').textContent = `CODEX ATLAS / ${pack.id.replaceAll('-', ' ').toUpperCase()}`;
   must('map-subtitle').textContent = pack.subtitle[language];
   must('mode-kicker').textContent = mode === 'learn'
-    ? (language === 'it' ? 'PERCORSO GUIDATO' : 'GUIDED PATH')
+    ? (language === 'it' ? 'LIBRERIA DI APPRENDIMENTO' : 'LEARNING LIBRARY')
     : (language === 'it' ? 'MAPPA INTERATTIVA' : 'INTERACTIVE MAP');
   must('map-hint').textContent = language === 'it'
-    ? 'Passa sui concetti per l’anteprima · clicca per aprire · trascina e usa la rotella per esplorare'
-    : 'Hover concepts to preview · click to open · drag and use the wheel to explore';
+    ? 'Passa sui nodi per l’anteprima · clicca macro-aree, sistemi o concetti · trascina e usa la rotella per esplorare'
+    : 'Hover nodes to preview · open macro areas, systems or concepts · drag and use the wheel to explore';
   searchInput.placeholder = language === 'it' ? 'Cerca un concetto…' : 'Search a concept…';
   languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
   languageToggle.setAttribute('aria-label', language === 'it' ? 'Passa all’inglese' : 'Switch to Italian');
@@ -647,10 +656,6 @@ function openNode(id, focus) {
   const node = nodeById.get(id);
   if (!node) return;
   selectedId = id;
-  if (mode === 'learn' && node.role === 'concept') {
-    const idx = conceptSequence.findIndex((entry) => entry.id === id);
-    if (idx >= 0) learnIndex = idx;
-  }
   renderDrawer(node);
   applySelection();
   if (focus) {
@@ -663,7 +668,6 @@ function openNode(id, focus) {
 function renderDrawer(node) {
   const path = nodePath(node);
   const wikiUrl = wikipediaUrl(node, language);
-  const learnPos = node.role === 'concept' ? conceptSequence.findIndex((entry) => entry.id === node.id) : -1;
   const badges = practicalBadges(node, language);
   const safety = practicalSafetyCard(node, language);
   const resources = renderResourceCards(node, language);
@@ -680,30 +684,156 @@ function renderDrawer(node) {
       </section>
     ` : `<p class="drawer-copy">${escapeHtml(node.description[language])}</p>`);
 
+  const hierarchy = !isConcept
+    ? (mode === 'learn' ? renderLearnFolder(node) : renderExploreHierarchy(node))
+    : '';
+  const learnConceptNav = mode === 'learn' && isConcept ? renderLearnConceptNav(node) : '';
+
   drawerContent.innerHTML = `
-    <p class="eyebrow">${roleLabel(node.role, language)}</p>
-    <nav class="breadcrumbs">${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(entry.title[language])}</button>`).join('<span>›</span>')}</nav>
+    <p class="eyebrow">${mode === 'learn' ? (language === 'it' ? 'IMPARA · CARTELLE' : 'LEARN · FOLDERS') : roleLabel(node.role, language)}</p>
+    <nav class="breadcrumbs">${mode === 'learn' ? `<button data-learn-root>${escapeHtml(pack.title[language])}</button><span>›</span>` : ''}${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(entry.title[language])}</button>`).join('<span>›</span>')}</nav>
     <h2>${escapeHtml(node.title[language])}</h2>
     ${badges ? `<div class="practical-badges">${badges}</div>` : ''}
     ${conceptBody}
+    ${hierarchy}
     ${isConcept && !isStudy && (safety || resources) ? `<div class="section-divider"><span>${detailLabel}</span></div>` : ''}
     ${isStudy ? '' : safety}
-    ${mode === 'learn' && node.role === 'concept' ? `
-      <section class="learn-card">
-        <div><span>${language === 'it' ? 'Percorso' : 'Learning path'}</span><strong>${learnPos + 1} / ${conceptSequence.length}</strong></div>
-        <div class="progress"><span style="width:${((learnPos + 1) / conceptSequence.length) * 100}%"></span></div>
-        <div class="learn-actions"><button data-learn="prev" ${learnPos <= 0 ? 'disabled' : ''}>← ${language === 'it' ? 'Prima' : 'Previous'}</button><button data-learn="next" ${learnPos >= conceptSequence.length - 1 ? 'disabled' : ''}>${language === 'it' ? 'Avanti' : 'Next'} →</button></div>
-      </section>` : ''}
+    ${learnConceptNav}
     ${isStudy ? '' : resources}
     ${wikiUrl ? `<a class="wiki-link" id="drawer-wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${language === 'it' ? 'Apri l’articolo completo' : 'Open full article'}</span><b>↗</b></a>` : ''}
   `;
-  drawer.classList.add('open');
-  drawer.setAttribute('aria-hidden', 'false');
-  drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, false)));
-  drawer.querySelector('[data-learn="prev"]')?.addEventListener('click', () => stepLearn(-1));
-  drawer.querySelector('[data-learn="next"]')?.addEventListener('click', () => stepLearn(1));
+  openDrawerShell();
+  bindDrawerNavigation();
   if (isStudy) void typesetMath(drawerContent);
   else if (isConcept) void hydrateDrawer(node, language);
+}
+
+function openDrawerShell() {
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+}
+
+function bindDrawerNavigation() {
+  drawer.querySelectorAll('[data-node]').forEach((button) => button.addEventListener('click', () => openNode(button.dataset.node, false)));
+  drawer.querySelectorAll('[data-learn-root]').forEach((button) => button.addEventListener('click', renderLearnRoot));
+}
+
+function renderExploreHierarchy(node) {
+  const direct = childrenOf(node);
+  const leaves = descendantConcepts(node);
+  if (!direct.length) return '';
+  const heading = language === 'it' ? 'Contenuti' : 'Contents';
+  const summary = language === 'it'
+    ? `${direct.length} ${node.role === 'domain' ? 'sotto-argomenti' : 'elementi'} · ${leaves.length} concetti`
+    : `${direct.length} ${node.role === 'domain' ? 'subtopics' : 'items'} · ${leaves.length} concepts`;
+
+  if (node.role === 'system') {
+    return `
+      <section class="hierarchy-section">
+        <div class="hierarchy-heading"><span>${heading}</span><small>${summary}</small></div>
+        <div class="leaf-list">${direct.map((concept) => hierarchyLeafButton(concept)).join('')}</div>
+      </section>`;
+  }
+
+  return `
+    <section class="hierarchy-section">
+      <div class="hierarchy-heading"><span>${heading}</span><small>${summary}</small></div>
+      <div class="hierarchy-tree">${direct.map((system) => {
+        const concepts = childrenOf(system);
+        return `
+          <article class="hierarchy-group">
+            <button class="hierarchy-system" data-node="${system.id}">
+              <span class="hierarchy-system-mark"></span>
+              <span><strong>${escapeHtml(system.title[language])}</strong><small>${concepts.length} ${language === 'it' ? 'concetti' : 'concepts'}</small></span>
+              <b>›</b>
+            </button>
+            <div class="hierarchy-concepts">${concepts.map((concept) => hierarchyLeafButton(concept)).join('')}</div>
+          </article>`;
+      }).join('')}</div>
+    </section>`;
+}
+
+function hierarchyLeafButton(concept) {
+  return `<button class="hierarchy-leaf" data-node="${concept.id}"><span></span><strong>${escapeHtml(concept.title[language])}</strong><b>↗</b></button>`;
+}
+
+function renderLearnRoot() {
+  selectedId = '';
+  hideHover();
+  drawerContent.innerHTML = `
+    <p class="eyebrow">${language === 'it' ? 'IMPARA · LIBRERIA' : 'LEARN · LIBRARY'}</p>
+    <h2>${escapeHtml(pack.title[language])}</h2>
+    <p class="drawer-copy">${language === 'it'
+      ? 'Scegli una macro-area, entra nelle sottocartelle e apri il concetto che vuoi studiare. La mappa rimane disponibile sullo sfondo.'
+      : 'Choose a macro area, open its subfolders, and pick the concept you want to study. The radial map stays available in the background.'}</p>
+    ${renderLearnFolderGrid(childrenByParent.get('__root__') ?? [])}
+  `;
+  openDrawerShell();
+  bindDrawerNavigation();
+  applySelection();
+  syncUrl();
+}
+
+function renderLearnFolder(node) {
+  const children = childrenOf(node);
+  const leafCount = descendantConcepts(node).length;
+  const label = node.role === 'domain'
+    ? (language === 'it' ? 'Sottocartelle' : 'Subfolders')
+    : (language === 'it' ? 'Lezioni' : 'Lessons');
+  return `
+    <section class="learn-library-section">
+      <div class="hierarchy-heading"><span>${label}</span><small>${leafCount} ${language === 'it' ? 'concetti' : 'concepts'}</small></div>
+      ${renderLearnFolderGrid(children)}
+    </section>`;
+}
+
+function renderLearnFolderGrid(nodes) {
+  if (!nodes.length) return '';
+  return `<div class="learn-folder-grid">${nodes.map((child) => {
+    const isFolder = child.role !== 'concept';
+    const count = isFolder ? descendantConcepts(child).length : 1;
+    const meta = child.role === 'domain'
+      ? `${childrenOf(child).length} ${language === 'it' ? 'cartelle' : 'folders'} · ${count} ${language === 'it' ? 'concetti' : 'concepts'}`
+      : child.role === 'system'
+        ? `${count} ${language === 'it' ? 'lezioni' : 'lessons'}`
+        : (language === 'it' ? 'Apri la lezione' : 'Open lesson');
+    return `
+      <button class="learn-folder ${isFolder ? 'is-folder' : 'is-lesson'}" data-node="${child.id}">
+        <span class="folder-icon" aria-hidden="true"></span>
+        <span class="folder-copy"><strong>${escapeHtml(child.title[language])}</strong><small>${escapeHtml(meta)}</small></span>
+        <b>›</b>
+      </button>`;
+  }).join('')}</div>`;
+}
+
+function renderLearnConceptNav(node) {
+  const parent = node.parentId ? nodeById.get(node.parentId) : null;
+  if (!parent) return '';
+  const siblings = childrenOf(parent).filter((entry) => entry.role === 'concept');
+  const index = siblings.findIndex((entry) => entry.id === node.id);
+  const previous = index > 0 ? siblings[index - 1] : null;
+  const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
+  return `
+    <section class="learn-concept-nav">
+      <button class="learn-back-folder" data-node="${parent.id}"><span class="folder-icon" aria-hidden="true"></span><span><small>${language === 'it' ? 'Torna alla cartella' : 'Back to folder'}</small><strong>${escapeHtml(parent.title[language])}</strong></span></button>
+      <div class="learn-sibling-nav">
+        ${previous ? `<button data-node="${previous.id}">← ${escapeHtml(previous.title[language])}</button>` : '<span></span>'}
+        ${next ? `<button data-node="${next.id}">${escapeHtml(next.title[language])} →</button>` : '<span></span>'}
+      </div>
+    </section>`;
+}
+
+function childrenOf(node) {
+  return childrenByParent.get(node.id) ?? [];
+}
+
+function descendantConcepts(node) {
+  if (node.role === 'concept') return [node];
+  return childrenOf(node).flatMap((child) => descendantConcepts(child));
+}
+
+function descendantNodes(node) {
+  return childrenOf(node).flatMap((child) => [child, ...descendantNodes(child)]);
 }
 
 function renderStudyLesson(node, lang) {
@@ -773,27 +903,26 @@ function closeDrawer() {
 function startLearn() {
   mode = 'learn';
   hideHover();
-  const idx = conceptSequence.findIndex((node) => node.id === selectedId);
-  learnIndex = idx >= 0 ? idx : 0;
   renderChrome();
-  openNode(conceptSequence[learnIndex].id, true);
+  renderLearnRoot();
 }
 function stopLearn() {
   mode = 'explore';
   hideHover();
+  if (selectedId && nodeById.has(selectedId)) renderDrawer(nodeById.get(selectedId));
+  else closeDrawer();
   renderChrome();
   applySelection();
   syncUrl();
-}
-function stepLearn(direction) {
-  learnIndex = Math.max(0, Math.min(conceptSequence.length - 1, learnIndex + direction));
-  openNode(conceptSequence[learnIndex].id, true);
 }
 
 function applySelection() {
   const selected = selectedId ? nodeById.get(selectedId) : null;
   const relevant = new Set();
-  if (selected) nodePath(selected).forEach((node) => relevant.add(node.id));
+  if (selected) {
+    nodePath(selected).forEach((node) => relevant.add(node.id));
+    if (selected.role !== 'concept') descendantNodes(selected).forEach((node) => relevant.add(node.id));
+  }
   viewport.querySelectorAll('.node-group').forEach((group) => {
     const id = group.dataset.nodeId;
     group.classList.toggle('selected', id === selectedId);

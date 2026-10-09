@@ -213,3 +213,12 @@ Keep one canonical location for each concern:
 - repository structure lives in this document.
 
 Do not keep legacy copies of moved files “just in case”; Git history is the backup.
+## Navigation model
+
+The shared renderer supports two complementary navigation modes:
+
+- **Explore** keeps the radial map as the primary interface. Domains and systems are clickable and their detail panel exposes the full descendant hierarchy down to concept leaves.
+- **Learn** uses the same taxonomy as a folder-style learning library: domain folders → system folders → concept lessons. The radial map remains available in the background and breadcrumbs allow moving back up the hierarchy.
+
+The viewport supports mouse/trackpad zoom and two-finger pinch up to 800%. Concept leaf hit areas are intentionally tighter than parent branches to reduce overlap in dense outer rings.
+

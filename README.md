@@ -11,7 +11,7 @@ The project currently includes four Codex, available in Italian and English, wit
 | Human Body | [codex-human-body.up.railway.app](https://codex-human-body.up.railway.app) |
 | Finance | [codex-finance.up.railway.app](https://codex-finance.up.railway.app) |
 | Home / Casa Pratica | [codex-home.up.railway.app](https://codex-home.up.railway.app) |
-| Statistics | Railway service: `CODEX_PACK=statistics` |
+| Statistics | [codex-statistics.up.railway.app](https://codex-statistics.up.railway.app) |
 
 ## Try it locally
 

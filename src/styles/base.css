@@ -171,7 +171,11 @@ a { color: inherit; }
 .domain-trunk { stroke-width: 7.8; opacity: .72; filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 18%, transparent)); }
 .system-branch { stroke-width: 3.35; opacity: .70; }
 .concept-branch { stroke-width: 1.15; opacity: .58; }
-.branch-hit { fill: none; stroke: transparent; stroke-width: 20; vector-effect: non-scaling-stroke; pointer-events: stroke; }
+.branch-hit { fill: none; stroke: transparent; vector-effect: non-scaling-stroke; pointer-events: stroke; }
+.domain-trunk-hit { stroke-width: 18; }
+.system-branch-hit { stroke-width: 12; }
+.concept-branch-hit { stroke-width: 6; }
+.concept-node-hit { fill: transparent; stroke: none; pointer-events: all; }
 .domain-node-dot, .system-node-dot, .leaf-dot, .callout-dot {
   fill: currentColor;
   stroke: #10141a;
@@ -202,7 +206,8 @@ a { color: inherit; }
 .domain-glass { fill: rgba(13,17,23,.89); }
 .system-glass { fill: rgba(13,17,23,.84); }
 .leaf-glass { fill: rgba(13,17,23,.72); stroke: rgba(255,255,255,.06); }
-.leaf-label-wrap { pointer-events: auto; }
+.leaf-label-wrap { pointer-events: none; }
+.leaf-label { pointer-events: visiblePainted; }
 .leaf-label { dominant-baseline: middle; font-size: 8.55px; font-weight: 520; letter-spacing: -.008em; stroke-width: 3.2px; fill: color-mix(in srgb, currentColor 47%, #f4f6f7); }
 .callout-title { font-size: 12.5px; font-weight: 780; letter-spacing: .055em; stroke-width: 4px; fill: color-mix(in srgb, currentColor 70%, #fff); }
 .callout-copy { font-size: 11.2px; font-weight: 470; stroke-width: 4px; fill: color-mix(in srgb, currentColor 36%, #bac4cc); }
@@ -439,6 +444,51 @@ kbd { border: 1px solid var(--line); border-bottom-color: var(--line-strong); bo
 .wiki-link > span:nth-child(2) { flex: 1; color: #d4dae0; font-size: 10.5px; font-weight: 620; }
 .wiki-link small { display: block; margin-bottom: 2px; color: var(--muted); font-size: 7px; letter-spacing: .12em; }
 .wiki-link b { color: var(--muted); }
+
+/* Hierarchy browser and folder-based Learn mode */
+.hierarchy-section, .learn-library-section { margin-top: 22px; }
+.hierarchy-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 10px; color: var(--muted); }
+.hierarchy-heading > span { font-size: 8px; font-weight: 820; letter-spacing: .14em; text-transform: uppercase; }
+.hierarchy-heading small { font-size: 8.5px; font-weight: 620; letter-spacing: .01em; }
+.hierarchy-tree { display: grid; gap: 10px; }
+.hierarchy-group { padding: 8px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.022); }
+.hierarchy-system { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 0; border-radius: 11px; background: transparent; color: inherit; text-align: left; }
+.hierarchy-system:hover { background: rgba(var(--accent-rgb), .06); }
+.hierarchy-system-mark { width: 9px; height: 9px; flex: 0 0 9px; border: 2px solid color-mix(in srgb, var(--accent) 70%, #fff); border-radius: 50%; box-shadow: 0 0 0 4px rgba(var(--accent-rgb), .07); }
+.hierarchy-system > span:nth-child(2) { flex: 1; min-width: 0; }
+.hierarchy-system strong { display: block; color: #e6ebee; font-size: 11px; font-weight: 700; }
+.hierarchy-system small { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+.hierarchy-system b { color: var(--muted); font-size: 15px; }
+.hierarchy-concepts, .leaf-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin-top: 4px; }
+.hierarchy-leaf { min-width: 0; min-height: 36px; display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid transparent; border-radius: 9px; background: rgba(255,255,255,.018); color: #b8c1c8; text-align: left; }
+.hierarchy-leaf:hover { border-color: rgba(var(--accent-rgb), .16); background: rgba(var(--accent-rgb), .055); color: #eef2f4; }
+.hierarchy-leaf > span { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: var(--accent); opacity: .72; }
+.hierarchy-leaf strong { min-width: 0; flex: 1; font-size: 9px; font-weight: 590; line-height: 1.25; }
+.hierarchy-leaf b { color: var(--muted); font-size: 8px; }
+
+.learn-folder-grid { display: grid; gap: 8px; margin-top: 17px; }
+.learn-folder { position: relative; width: 100%; min-height: 66px; display: flex; align-items: center; gap: 13px; padding: 11px 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: linear-gradient(135deg, rgba(255,255,255,.035), rgba(var(--accent-rgb), .018)); color: inherit; text-align: left; transition: transform .14s ease, border-color .14s ease, background .14s ease; }
+.learn-folder::after { content: ""; position: absolute; inset: auto -30px -42px auto; width: 110px; height: 110px; border-radius: 50%; background: rgba(var(--accent-rgb), .06); filter: blur(2px); pointer-events: none; }
+.learn-folder:hover { transform: translateY(-1px); border-color: rgba(var(--accent-rgb), .22); background: linear-gradient(135deg, rgba(var(--accent-rgb), .075), rgba(255,255,255,.025)); }
+.folder-icon { position: relative; width: 32px; height: 25px; flex: 0 0 32px; border: 1px solid rgba(var(--accent-rgb), .30); border-radius: 7px; background: rgba(var(--accent-rgb), .10); box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.folder-icon::before { content: ""; position: absolute; left: 3px; top: -5px; width: 14px; height: 7px; border: 1px solid rgba(var(--accent-rgb), .30); border-bottom: 0; border-radius: 5px 5px 0 0; background: rgba(var(--accent-rgb), .10); }
+.learn-folder.is-lesson .folder-icon { width: 27px; height: 31px; flex-basis: 27px; border-radius: 6px; }
+.learn-folder.is-lesson .folder-icon::before { left: auto; right: 2px; top: 2px; width: 7px; height: 7px; border: 0; border-left: 1px solid rgba(var(--accent-rgb), .32); border-bottom: 1px solid rgba(var(--accent-rgb), .32); border-radius: 0; transform: rotate(-45deg); background: transparent; }
+.folder-copy { min-width: 0; flex: 1; }
+.folder-copy strong { display: block; color: #edf1f3; font-size: 12px; font-weight: 710; line-height: 1.2; }
+.folder-copy small { display: block; margin-top: 4px; color: var(--muted); font-size: 8.5px; line-height: 1.25; }
+.learn-folder > b { position: relative; z-index: 1; color: var(--muted); font-size: 16px; }
+.learn-concept-nav { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+.learn-back-folder { width: 100%; display: flex; align-items: center; gap: 11px; padding: 10px 11px; border: 1px solid rgba(var(--accent-rgb), .16); border-radius: 13px; background: rgba(var(--accent-rgb), .045); color: inherit; text-align: left; }
+.learn-back-folder .folder-icon { transform: scale(.78); transform-origin: center; }
+.learn-back-folder > span:last-child { min-width: 0; }
+.learn-back-folder small { display: block; color: var(--muted); font-size: 7.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.learn-back-folder strong { display: block; margin-top: 2px; color: #e4e9ec; font-size: 10.5px; }
+.learn-sibling-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
+.learn-sibling-nav button { min-height: 38px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.022); color: #aeb8bf; font-size: 8.5px; line-height: 1.2; }
+.learn-sibling-nav button:last-child { text-align: right; }
+.learn-sibling-nav button:hover { border-color: rgba(var(--accent-rgb), .18); color: #e4eaed; }
+
 .learn-card { margin-top: 20px; padding: 14px; border: 1px solid rgba(var(--accent-rgb), .16); border-radius: 15px; background: rgba(var(--accent-rgb), .055); color: #e9eef2; }
 .learn-card > div:first-child { display: flex; justify-content: space-between; font-size: 9px; }
 .progress { height: 3px; margin: 11px 0 14px; border-radius: 999px; background: rgba(255,255,255,.10); overflow: hidden; }
@@ -562,6 +612,10 @@ kbd { border: 1px solid var(--line); border-bottom-color: var(--line-strong); bo
   .drawer h2 { margin-top: 13px; font-size: clamp(27px, 8vw, 38px); }
   .drawer-copy { font-size: 13.5px; line-height: 1.62; }
   .wiki-intro-card { padding: 14px; }
+  .hierarchy-concepts, .leaf-list { grid-template-columns: 1fr; }
+  .hierarchy-leaf { min-height: 44px; }
+  .learn-folder { min-height: 70px; }
+  .learn-sibling-nav button { min-height: 44px; }
   .resource-link { min-height: 54px; }
   .resource-link > span:first-child { width: 34px; height: 34px; flex-basis: 34px; }
   .breadcrumbs { padding-right: 28px; }
