@@ -12,11 +12,19 @@ Release one pack:
 ./release.sh climate
 ```
 
-Release several new packs in sequence:
+Release several packs in sequence:
 
 ```bash
 ./release.sh climate survival nutrition
 ```
+
+Redeploy **all registered Codex** with one command:
+
+```bash
+./release.sh all
+```
+
+`all` expands automatically from `src/packs/registry.js`, so future packs are included without editing the script.
 
 For each pack the script:
 
@@ -32,14 +40,14 @@ For each pack the script:
 10. tries to rename it to `codex-<pack>.up.railway.app`;
 11. prints the Git commands you can run afterwards.
 
-Example:
+Example for a renderer-wide update:
 
 ```bash
-./release.sh climate survival nutrition
+./release.sh all
 
 git status
 git add -A
-git commit -m "Add Climate, Survival and Nutrition Codex"
+git commit -m "Update Codex Atlas"
 git push origin main
 ```
 
@@ -141,3 +149,23 @@ railway domain list -s climate -e production
 ```
 
 For the complete manual workflow and troubleshooting, see [RAILWAY_CLI.md](RAILWAY_CLI.md).
+
+## NVM / stale Railway CLI path
+
+If the script reports an error similar to:
+
+```text
+/home/<user>/.nvm/versions/node/<old-version>/bin/railway: No such file or directory
+```
+
+Bash is usually holding a stale executable path from a previous NVM/Node version.
+
+The release helper clears Bash's command cache and resolves the current Railway executable from `PATH` before running. If the CLI is genuinely missing from the active Node installation, run:
+
+```bash
+hash -r
+npm install -g @railway/cli
+railway --version
+```
+
+Then rerun the release. The workflow is idempotent: existing services/domains are detected and reused.

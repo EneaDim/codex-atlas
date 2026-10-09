@@ -2,10 +2,12 @@ import { RADII } from './constants.js';
 import { polar } from './layout.js';
 
 export function createViewportController(svgElement, viewportElement, onScale) {
-  let scale = 1;
+  const mobileViewport = window.matchMedia('(max-width: 760px)');
+  const initialScale = mobileViewport.matches ? 1.2 : 1;
+  let scale = initialScale;
   let x = 0;
   let y = 0;
-  const minScale = 0.58;
+  const minScale = mobileViewport.matches ? 0.68 : 0.58;
   const maxScale = 8;
 
   const pointers = new Map();
@@ -190,7 +192,7 @@ export function createViewportController(svgElement, viewportElement, onScale) {
   apply();
   return {
     reset() {
-      scale = 1;
+      scale = initialScale;
       x = 0;
       y = 0;
       pointers.clear();

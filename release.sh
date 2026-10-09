@@ -6,6 +6,7 @@ set -euo pipefail
 # Usage:
 #   ./release.sh climate
 #   ./release.sh climate survival nutrition
+#   ./release.sh all
 #
 # The script deploys the current local working tree to Railway.
 # Git commit/push is intentionally left to you after the Railway release.
@@ -28,9 +29,28 @@ ok()  { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 warn(){ printf '\033[1;33m!\033[0m %s\n' "$*" >&2; }
 die() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
-command -v railway >/dev/null 2>&1 || die "Railway CLI not found. Install it with: npm install -g @railway/cli"
-command -v node >/dev/null 2>&1 || die "Node.js is required."
-command -v npm >/dev/null 2>&1 || die "npm is required."
+# NVM can leave Bash with a cached path to a Railway executable from a previous
+# Node version. Clear Bash's command hash and resolve the real executable from PATH.
+hash -r 2>/dev/null || true
+
+RAILWAY_BIN="${RAILWAY_BIN:-$(type -P railway 2>/dev/null || true)}"
+NODE_BIN="${NODE_BIN:-$(type -P node 2>/dev/null || true)}"
+NPM_BIN="${NPM_BIN:-$(type -P npm 2>/dev/null || true)}"
+
+[[ -n "$NODE_BIN" && -x "$NODE_BIN" ]] || die "Node.js is required."
+[[ -n "$NPM_BIN" && -x "$NPM_BIN" ]] || die "npm is required."
+[[ -n "$RAILWAY_BIN" && -x "$RAILWAY_BIN" ]] || die "Railway CLI not found in the current PATH. Run: npm install -g @railway/cli"
+
+railway_cli() {
+  # Re-resolve once if an NVM switch invalidated the executable while the shell
+  # was open. This avoids stale /home/.../.nvm/versions/node/.../railway paths.
+  if [[ ! -x "$RAILWAY_BIN" ]]; then
+    hash -r 2>/dev/null || true
+    RAILWAY_BIN="$(type -P railway 2>/dev/null || true)"
+  fi
+  [[ -n "$RAILWAY_BIN" && -x "$RAILWAY_BIN" ]] || die "Railway CLI path became invalid. Run: hash -r && npm install -g @railway/cli"
+  "$RAILWAY_BIN" "$@"
+}
 
 [[ $# -gt 0 ]] || {
   cat <<'EOF'
@@ -40,12 +60,24 @@ Usage:
 Examples:
   ./release.sh climate
   ./release.sh climate survival nutrition
+  ./release.sh all
 
 The Railway service name is the pack id.
 The requested Railway domain is codex-<pack>.up.railway.app.
 EOF
   exit 2
 }
+
+
+# Expand the convenience keyword "all" to every registered production pack.
+if [[ $# -eq 1 && "$1" == "all" ]]; then
+  mapfile -t ALL_PACKS < <(node --input-type=module - <<'NODE'
+import { PACK_IDS } from './src/packs/registry.js';
+for (const pack of PACK_IDS) console.log(pack);
+NODE
+  )
+  set -- "${ALL_PACKS[@]}"
+fi
 
 pack_exists() {
   local pack="$1"
@@ -58,7 +90,7 @@ NODE
 service_exists() {
   local service="$1"
   local json
-  json="$(railway service list -e "$ENVIRONMENT" --json 2>/dev/null || true)"
+  json="$(railway_cli service list -e "$ENVIRONMENT" --json 2>/dev/null || true)"
   SERVICE_TO_CHECK="$service" node -e '
     const fs=require("fs");
     const name=process.env.SERVICE_TO_CHECK;
@@ -80,7 +112,7 @@ service_exists() {
 current_service_domain() {
   local service="$1"
   local json
-  json="$(railway domain list -s "$service" -e "$ENVIRONMENT" --json 2>/dev/null || true)"
+  json="$(railway_cli domain list -s "$service" -e "$ENVIRONMENT" --json 2>/dev/null || true)"
   node -e '
     const fs=require("fs");
     let data;
@@ -98,7 +130,7 @@ current_service_domain() {
 
 latest_deployment_status() {
   local service="$1"
-  railway deployment list -s "$service" -e "$ENVIRONMENT" --json --limit 1 2>/dev/null |
+  railway_cli deployment list -s "$service" -e "$ENVIRONMENT" --json --limit 1 2>/dev/null |
     node -e '
       const fs=require("fs");
       let data;
@@ -139,7 +171,7 @@ npm run check
 ok "Repository checks passed"
 
 say "Checking Railway context"
-railway status >/dev/null
+railway_cli status >/dev/null
 ok "Railway project is linked"
 
 released=()
@@ -155,12 +187,12 @@ for pack in "$@"; do
   if service_exists "$service"; then
     ok "Service '$service' already exists"
   else
-    railway add --service "$service" --variables "CODEX_PACK=$pack"
+    railway_cli add --service "$service" --variables "CODEX_PACK=$pack"
     ok "Created Railway service '$service'"
   fi
 
   say "Connecting $service to $REPO@$BRANCH"
-  if railway service source connect \
+  if railway_cli service source connect \
       --repo "$REPO" \
       --branch "$BRANCH" \
       --service "$service" \
@@ -171,14 +203,14 @@ for pack in "$@"; do
   fi
 
   say "Setting CODEX_PACK=$pack"
-  railway variable set "CODEX_PACK=$pack" \
+  railway_cli variable set "CODEX_PACK=$pack" \
     -s "$service" \
     -e "$ENVIRONMENT" \
     --skip-deploys
   ok "Service variable set"
 
   say "Deploying current local working tree"
-  railway up \
+  railway_cli up \
     --service "$service" \
     --environment "$ENVIRONMENT" \
     --detach
@@ -187,7 +219,7 @@ for pack in "$@"; do
   say "Ensuring public Railway domain"
   domain="$(current_service_domain "$service")"
   if [[ -z "$domain" ]]; then
-    railway domain -s "$service" -e "$ENVIRONMENT" >/dev/null
+    railway_cli domain -s "$service" -e "$ENVIRONMENT" >/dev/null
     sleep 2
     domain="$(current_service_domain "$service")"
   fi
@@ -198,7 +230,7 @@ for pack in "$@"; do
     ok "Domain already named $domain"
   else
     say "Renaming $domain → ${desired_domain}.up.railway.app"
-    if railway domain update "$domain" \
+    if railway_cli domain update "$domain" \
         --domain "$desired_domain" \
         -s "$service" \
         -e "$ENVIRONMENT"; then
@@ -223,7 +255,7 @@ Railway is done. Git is intentionally separate.
 Suggested next commands:
   git status
   git add -A
-  git commit -m "Add ${released[*]} Codex"
+  git commit -m "Update Codex Atlas"
   git push origin $BRANCH
 
 Check all services:
