@@ -36,6 +36,7 @@ codex-atlas/
 │   ├── CONTENT_PACKS.md
 │   ├── DEVELOPMENT.md
 │   ├── RELEASE.md
+│   ├── SEARCH.md
 │   ├── RAILWAY_CLI.md
 │   └── STATISTICS_COURSE.md
 │
@@ -52,6 +53,7 @@ codex-atlas/
 │
 ├── scripts/
 │   ├── audit.mjs
+│   ├── search-test.mjs
 │   └── validate.mjs
 │
 └── src/
@@ -62,6 +64,7 @@ codex-atlas/
     │   ├── dom.js
     │   ├── layout.js
     │   ├── math.js
+    │   ├── search.js
     │   ├── viewport.js
     │   └── wikipedia.js
     ├── packs/
@@ -110,6 +113,7 @@ server.mjs
              ├─ src/core/layout.js
              ├─ src/core/viewport.js
              ├─ src/core/math.js
+             ├─ src/core/search.js
              ├─ src/core/wikipedia.js
              └─ src/styles/main.css
 ```
@@ -153,7 +157,7 @@ Shared application behavior.
 
 ### `app.js`
 
-Main UI controller and renderer: radial map, Explore/Learn modes, search, concept previews, drawers, language switching, themes and practical Home resources.
+Main UI controller and renderer: radial map, Explore/Learn modes, semantic-search UI, concept previews, drawers, language switching, themes and practical Home resources.
 
 ### `constants.js`
 
@@ -170,6 +174,10 @@ Transforms pack data into the radial hierarchy, calculates positions and validat
 ### `math.js`
 
 Loads MathJax-backed typesetting for lesson formulas and examples. If the external renderer is unavailable, the UI falls back to readable TeX text.
+
+### `search.js`
+
+Builds the shared multilingual semantic index across all packs. It combines titles, descriptions, hierarchy context, aliases, search terms, fuzzy similarity and curated cross-pack semantic relations. See [SEARCH.md](SEARCH.md).
 
 ### `viewport.js`
 
@@ -197,7 +205,7 @@ Pack files should contain **content**, not renderer logic. Pack IDs are register
 
 ## `scripts/`
 
-Repository quality tooling. `validate.mjs` checks pack IDs, localized titles, duplicate node IDs and artwork paths; `audit.mjs` detects exact duplicate files and known legacy paths. Both run as part of `npm run check`.
+Repository quality tooling. `validate.mjs` checks pack IDs, localized titles, duplicate node IDs and artwork paths; `search-test.mjs` protects semantic-search behavior; `audit.mjs` detects exact duplicate files and known legacy paths. All run as part of `npm run check`.
 
 ## `src/styles/`
 
@@ -223,6 +231,7 @@ public/images/<pack-id>/center.<ext>
 | Change radial geometry | `src/core/layout.js` / `constants.js` |
 | Change pan/zoom/touch | `src/core/viewport.js` |
 | Change Wikipedia loading | `src/core/wikipedia.js` |
+| Change semantic search | `src/core/search.js`, concept `aliases` / `searchTerms` |
 | Change UI behavior | `src/core/app.js` |
 | Change appearance | `src/styles/` |
 | Change server/runtime pack selection | `server.mjs`, `src/packs/registry.js` |

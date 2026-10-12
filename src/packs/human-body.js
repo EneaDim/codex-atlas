@@ -1548,6 +1548,14 @@ export const humanBody = {
               "wiki": {
                 "en": "Inflammation",
                 "it": "Infiammazione"
+              },
+              "aliases": {
+                "en": ["inflammatory response", "acute inflammation", "chronic inflammation", "redness and swelling"],
+                "it": ["risposta infiammatoria", "infiammazione acuta", "infiammazione cronica", "rossore e gonfiore"]
+              },
+              "searchTerms": {
+                "en": ["immune response to injury", "inflammation and infection", "inflammatory process"],
+                "it": ["risposta immunitaria a una lesione", "infiammazione e infezione", "processo infiammatorio"]
               }
             },
             {

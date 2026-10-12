@@ -5,6 +5,7 @@ import { assertUniqueIds, buildLayout, flattenPack, polar } from './layout.js';
 import { createViewportController } from './viewport.js';
 import { typesetMath } from './math.js';
 import { fetchWikipediaIntroForNode, wikipediaUrl } from './wikipedia.js';
+import { packSiteUrl, semanticSearch } from './search.js';
 
 const requestedPack = window.__CODEX_PACK__ || 'human-body';
 const pack = getPack(requestedPack);
@@ -449,7 +450,7 @@ function renderChrome() {
   must('map-hint').textContent = language === 'it'
     ? 'Passa sui nodi per l’anteprima · clicca macro-aree, sistemi o concetti · trascina e usa la rotella per esplorare'
     : 'Hover nodes to preview · open macro areas, systems or concepts · drag and use the wheel to explore';
-  searchInput.placeholder = language === 'it' ? 'Cerca un concetto…' : 'Search a concept…';
+  searchInput.placeholder = language === 'it' ? 'Cerca per concetto o significato…' : 'Search by concept or meaning…';
   languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
   languageToggle.setAttribute('aria-label', language === 'it' ? 'Passa all’inglese' : 'Switch to Italian');
   languageToggle.setAttribute('title', language === 'it' ? 'English' : 'Italiano');
@@ -932,22 +933,41 @@ function applySelection() {
 }
 
 function renderSearchResults(query) {
-  const term = query.trim().toLocaleLowerCase();
+  const term = query.trim();
   if (!term) {
     searchResults.hidden = true;
     searchResults.replaceChildren();
     return;
   }
-  const matches = flat
-    .filter((node) => `${node.title.en} ${node.title.it}`.toLocaleLowerCase().includes(term))
-    .slice(0, 10);
+
+  const matches = semanticSearch(term, {
+    currentPackId: pack.id,
+    language,
+    limit: 12,
+  });
+  const semanticLabel = language === 'it' ? 'semantico' : 'semantic';
+  const allCodexLabel = language === 'it' ? 'Ricerca semantica · tutti i Codex' : 'Semantic search · all Codex';
+
   searchResults.innerHTML = matches.length
-    ? matches.map((node) => `<button data-search="${node.id}"><span><strong>${escapeHtml(node.title[language])}</strong><small>${roleLabel(node.role, language)}</small></span><b>↗</b></button>`).join('')
-    : `<p>${language === 'it' ? 'Nessun risultato.' : 'No results.'}</p>`;
-  searchResults.querySelectorAll('[data-search]').forEach((button) => button.addEventListener('click', () => {
-    openNode(button.dataset.search, true);
+    ? `<div class="search-mode-note"><span>✦</span>${escapeHtml(allCodexLabel)}</div>${matches.map((result) => {
+        const role = roleLabel(result.node.role, language);
+        const path = result.path ? `${result.path} · ` : '';
+        const semantic = result.semantic ? `<em>${semanticLabel}</em>` : '';
+        const otherPack = result.packId !== pack.id ? ' search-result-cross-pack' : '';
+        return `<button class="search-result${otherPack}" data-search-pack="${escapeHtml(result.packId)}" data-search-node="${escapeHtml(result.node.id)}"><span><strong>${escapeHtml(result.title)}</strong><small><b>${escapeHtml(result.packTitle)}</b> · ${escapeHtml(path)}${escapeHtml(role)} ${semantic}</small></span><i>${result.packId === pack.id ? '↗' : '→'}</i></button>`;
+      }).join('')}`
+    : `<p>${language === 'it' ? 'Nessun risultato semantico.' : 'No semantic results.'}</p>`;
+
+  searchResults.querySelectorAll('[data-search-node]').forEach((button) => button.addEventListener('click', () => {
+    const targetPack = button.dataset.searchPack;
+    const targetNode = button.dataset.searchNode;
     searchInput.value = '';
     closeSearch();
+    if (targetPack === pack.id) {
+      openNode(targetNode, true);
+      return;
+    }
+    location.href = packSiteUrl(targetPack, { nodeId: targetNode, language });
   }));
   searchResults.hidden = false;
 }

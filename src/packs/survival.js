@@ -1242,6 +1242,29 @@ export const survival = {
               }
             },
             {
+              "id": "wound-care",
+              "title": {
+                "en": "Wound care",
+                "it": "Cura delle ferite"
+              },
+              "description": {
+                "en": "Basic wound care focuses on cleaning, protecting and monitoring an injury while arranging professional care when needed.",
+                "it": "La cura di base di una ferita consiste nel pulirla, proteggerla e monitorarla, ricorrendo a cure professionali quando necessario."
+              },
+              "wiki": {
+                "en": "Wound healing",
+                "it": "Guarigione delle ferite"
+              },
+              "aliases": {
+                "en": ["wound cleaning", "wound dressing", "infected wound", "red swollen wound"],
+                "it": ["pulizia della ferita", "medicazione della ferita", "ferita infetta", "ferita rossa e gonfia"]
+              },
+              "searchTerms": {
+                "en": ["first aid wound", "redness swelling infection signs", "injury care"],
+                "it": ["primo soccorso ferita", "rossore gonfiore segni di infezione", "cura di una lesione"]
+              }
+            },
+            {
               "id": "bone-fracture",
               "title": {
                 "en": "Bone fracture",

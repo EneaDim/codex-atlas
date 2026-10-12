@@ -574,6 +574,10 @@ export const nutrition = {
               "wiki": {
                 "en": "Omega-3 fatty acid",
                 "it": "Acidi grassi omega-3"
+              },
+              "searchTerms": {
+                "en": ["nutrition and inflammatory pathways", "dietary fats and inflammation"],
+                "it": ["nutrizione e vie infiammatorie", "grassi alimentari e infiammazione"]
               }
             },
             {
@@ -1814,6 +1818,10 @@ export const nutrition = {
               "wiki": {
                 "en": "Mediterranean diet",
                 "it": "Dieta mediterranea"
+              },
+              "searchTerms": {
+                "en": ["dietary pattern and inflammation", "cardiometabolic dietary pattern"],
+                "it": ["modello alimentare e infiammazione", "modello alimentare cardiometabolico"]
               }
             },
             {

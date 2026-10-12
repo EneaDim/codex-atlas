@@ -168,3 +168,11 @@ No renderer copy is necessary.
 ## Editing guidance
 
 Prefer content changes in pack files and shared behavior changes in `src/core/`. If a feature is useful for more than one Codex, implement it in the shared renderer rather than embedding UI code in a pack.
+## Cross-pack concepts and semantic search
+
+Do not duplicate a concept simply because it is relevant to several Codex. Give it one canonical home, then use `aliases`, `searchTerms` and the shared semantic relations in `src/core/search.js` to make related contexts discoverable.
+
+For example, **Inflammation** belongs canonically to Human Body → Immune system. Nutrition may expose relevant dietary contexts, while Survival may expose wound-care contexts, without creating three copies of the same definition.
+
+See [SEARCH.md](SEARCH.md).
+

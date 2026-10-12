@@ -2,7 +2,7 @@
 
 Codex Atlas is a collection of interactive radial knowledge maps for exploring complex subjects visually.
 
-All Codex share the same renderer and support Italian/English, desktop/mobile, dark/light themes, hierarchical browsing and Learn mode.
+All Codex share the same renderer and support Italian/English, desktop/mobile, dark/light themes, hierarchical browsing, Learn mode and semantic search across the whole Atlas.
 
 ## Live sites
 
@@ -48,6 +48,7 @@ http://localhost:4173
 - [Architecture](docs/ARCHITECTURE.md)
 - [Content packs](docs/CONTENT_PACKS.md)
 - [Development](docs/DEVELOPMENT.md)
+- [Semantic search](docs/SEARCH.md)
 - [Release helper](docs/RELEASE.md)
 - [Railway CLI](docs/RAILWAY_CLI.md)
 - [Statistics course coverage](docs/STATISTICS_COURSE.md)
