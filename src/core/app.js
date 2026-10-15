@@ -42,7 +42,7 @@ const app = document.querySelector('#app');
 app.innerHTML = `
   <main class="app-shell">
     <header class="topbar">
-      <a class="brand" href="/" aria-label="Codex Atlas home">
+      <a class="brand" id="atlas-home-link" href="https://codex-atlas.up.railway.app" aria-label="Codex Atlas home">
         <span class="brand-mark">C</span>
         <span><strong id="brand-title"></strong><small id="brand-kicker"></small></span>
       </a>
@@ -108,6 +108,7 @@ const searchToggle = must('search-toggle');
 const themeToggle = must('theme-toggle');
 const languageSwitch = must('language-switch');
 const aboutDialog = must('about-dialog');
+const atlasHomeLink = must('atlas-home-link');
 const zoomLabel = must('zoom-label');
 
 const viewportController = createViewportController(svg, viewport, (scale) => {
@@ -449,6 +450,9 @@ function renderChrome() {
   document.title = `${localized(pack.title, language)} — Codex Atlas`;
   must('brand-title').textContent = localized(pack.title, language);
   must('brand-kicker').textContent = `CODEX ATLAS / ${pack.id.replaceAll('-', ' ').toUpperCase()}`;
+  atlasHomeLink.href = atlasHomeUrl(language);
+  atlasHomeLink.title = t('atlasHome', language);
+  atlasHomeLink.setAttribute('aria-label', t('atlasHome', language));
   must('map-subtitle').textContent = localized(pack.subtitle, language);
   must('mode-kicker').textContent = t(mode === 'learn' ? 'learningLibrary' : 'interactiveMap', language);
   must('map-hint').textContent = t('mapHint', language);
@@ -1058,6 +1062,12 @@ function wrapWords(value, max) {
   }
   if (line) lines.push(line);
   return lines;
+}
+
+function atlasHomeUrl(lang = language) {
+  const url = new URL('https://codex-atlas.up.railway.app');
+  url.searchParams.set('lang', lang);
+  return url.toString();
 }
 
 function syncUrl() {

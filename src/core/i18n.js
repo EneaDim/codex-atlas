@@ -98,6 +98,7 @@ const UI = Object.freeze({
   roleSystem: { it: 'Sistema', en: 'System', es: 'Sistema' },
   roleConcept: { it: 'Concetto', en: 'Concept', es: 'Concepto' },
   languageGroup: { it: 'Lingua', en: 'Language', es: 'Idioma' },
+  atlasHome: { it: 'Torna alla pagina principale di Codex Atlas', en: 'Back to the Codex Atlas main page', es: 'Volver a la página principal de Codex Atlas' },
   wikiFallback: { it: 'fallback', en: 'fallback', es: 'alternativa' },
 });
 
