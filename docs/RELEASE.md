@@ -24,12 +24,12 @@ Redeploy **all registered Codex** with one command:
 ./release.sh all
 ```
 
-`all` expands automatically from `src/packs/registry.js`, so future packs are included without editing the script.
+`all` deploys the `atlas` main hub first and then expands the registered content packs from `src/packs/registry.js`, so future packs are included automatically.
 
 For each pack the script:
 
 1. runs `npm run check`;
-2. verifies that the pack exists in `src/packs/registry.js`;
+2. verifies the release target (`atlas` or a pack registered in `src/packs/registry.js`);
 3. checks whether the Railway service already exists;
 4. creates it when missing;
 5. connects it to `EneaDim/codex-atlas@main`;
@@ -55,6 +55,7 @@ git push origin main
 
 | Service / pack | Site |
 | --- | --- |
+| `atlas` | https://codex-atlas.up.railway.app |
 | `human-body` | https://codex-human-body.up.railway.app |
 | `finance` | https://codex-finance.up.railway.app |
 | `home` | https://codex-home.up.railway.app |

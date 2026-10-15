@@ -8,7 +8,8 @@ import { gzipSync } from 'node:zlib';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const port = Number(process.env.PORT || 4173);
 const configuredPack = process.env.CODEX_PACK || DEFAULT_PACK_ID;
-const codexPack = isPackId(configuredPack) ? configuredPack : DEFAULT_PACK_ID;
+const isAtlasHub = configuredPack === 'atlas';
+const codexPack = isAtlasHub ? 'atlas' : (isPackId(configuredPack) ? configuredPack : DEFAULT_PACK_ID);
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -47,14 +48,14 @@ createServer(async (req, res) => {
       return;
     }
     let pathname = decodeURIComponent(url.pathname);
-    if (pathname === '/') pathname = '/index.html';
+    if (pathname === '/') pathname = isAtlasHub ? '/hub.html' : '/index.html';
     const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
     let path = join(root, safe);
     try {
       const info = await stat(path);
       if (info.isDirectory()) path = join(path, 'index.html');
     } catch {
-      path = join(root, 'index.html');
+      path = join(root, isAtlasHub ? 'hub.html' : 'index.html');
     }
 
     const ext = extname(path);

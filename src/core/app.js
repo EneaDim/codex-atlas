@@ -4,11 +4,18 @@ import { escapeHtml, delay, must, svgEl } from './dom.js';
 import { assertUniqueIds, buildLayout, flattenPack, polar } from './layout.js';
 import { createViewportController } from './viewport.js';
 import { typesetMath } from './math.js';
-import { fetchWikipediaIntroForNode, wikipediaUrl } from './wikipedia.js';
-import { packSiteUrl, semanticSearch } from './search.js';
+import { fetchWikipediaIntroForNode, hydrateWikipediaTitlesForPack, wikipediaUrl } from './wikipedia.js';
+import { localized, normalizeLanguage, t } from './i18n.js';
+import { packSiteUrl, rebuildSearchIndex, semanticSearch } from './search.js';
 
+const queryParams = new URLSearchParams(location.search);
+let language = normalizeLanguage(queryParams.get('lang'), 'en');
 const requestedPack = window.__CODEX_PACK__ || 'human-body';
 const pack = getPack(requestedPack);
+if (language === 'es') {
+  await hydrateWikipediaTitlesForPack(pack, 'es');
+  rebuildSearchIndex();
+}
 document.documentElement.dataset.codexPack = pack.id;
 let theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 const flat = flattenPack(pack);
@@ -24,9 +31,8 @@ for (const node of flat) {
 const layout = buildLayout(pack);
 const layoutById = new Map(layout.map((entry) => [entry.id, entry]));
 
-let language = new URLSearchParams(location.search).get('lang') === 'it' ? 'it' : 'en';
-let mode = new URLSearchParams(location.search).get('mode') === 'learn' ? 'learn' : 'explore';
-let selectedId = new URLSearchParams(location.search).get('node') ?? '';
+let mode = queryParams.get('mode') === 'learn' ? 'learn' : 'explore';
+let selectedId = queryParams.get('node') ?? '';
 let hoverVersion = 0;
 let hoverTimer;
 let hoverNodeId = '';
@@ -47,7 +53,7 @@ app.innerHTML = `
         </div>
         <button class="round-button" id="search-toggle" aria-label="Search">⌕</button>
         <button class="round-button theme-button" id="theme-toggle" aria-label="Switch theme">☼</button>
-        <button class="round-button language-button" id="language-toggle">IT</button>
+        <div class="language-switch" id="language-switch" role="group" aria-label="Language"><button data-lang="it">IT</button><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
         <button class="round-button" id="about-toggle" aria-label="About">i</button>
       </div>
     </header>
@@ -100,7 +106,7 @@ const searchInput = must('search-input');
 const searchResults = must('search-results');
 const searchToggle = must('search-toggle');
 const themeToggle = must('theme-toggle');
-const languageToggle = must('language-toggle');
+const languageSwitch = must('language-switch');
 const aboutDialog = must('about-dialog');
 const zoomLabel = must('zoom-label');
 
@@ -144,7 +150,7 @@ function renderMap() {
     markerLayer.append(markerGroup);
 
     const labelGroup = interactiveGroup(node, 'label-group', true);
-    appendInnerLabel(labelGroup, node.title[language], x, y, entry.angle, 'domain-label');
+    appendInnerLabel(labelGroup, localized(node.title, language), x, y, entry.angle, 'domain-label');
     labelLayer.append(labelGroup);
   }
 
@@ -163,7 +169,7 @@ function renderMap() {
     markerLayer.append(markerGroup);
 
     const labelGroup = interactiveGroup(node, 'label-group', true);
-    appendInnerLabel(labelGroup, node.title[language], x, y, entry.angle, 'system-label');
+    appendInnerLabel(labelGroup, localized(node.title, language), x, y, entry.angle, 'system-label');
     labelLayer.append(labelGroup);
   }
 
@@ -185,7 +191,7 @@ function renderMap() {
     markerLayer.append(markerGroup);
 
     const labelGroup = interactiveGroup(node, 'label-group', true);
-    appendLeafLabel(labelGroup, node.title[language], entry.angle);
+    appendLeafLabel(labelGroup, localized(node.title, language), entry.angle);
     labelLayer.append(labelGroup);
   }
 
@@ -215,7 +221,7 @@ function appendCenter() {
     class: 'center-image',
   }));
   const text = svgEl('text', { x: 0, y: 122, 'text-anchor': 'middle', class: 'center-title' });
-  text.textContent = pack.centerLabel?.[language] || pack.title[language].toUpperCase();
+  text.textContent = localized(pack.centerLabel, language, localized(pack.title, language).toUpperCase());
   center.append(text);
   center.addEventListener('click', () => {
     hideHover();
@@ -297,10 +303,10 @@ function appendDomainCallout(group, node, entry) {
   }
 
   const title = svgEl('text', { x, y, 'text-anchor': anchor, class: 'callout-title' });
-  title.textContent = node.title[language].toUpperCase();
+  title.textContent = localized(node.title, language).toUpperCase();
   group.append(title);
 
-  const lines = wrapWords(node.description[language], 39).slice(0, 2);
+  const lines = wrapWords(localized(node.description, language), 39).slice(0, 2);
   lines.forEach((line, index) => {
     const copy = svgEl('text', {
       x,
@@ -318,7 +324,7 @@ function interactiveGroup(node, extraClass = '', focusable = true) {
     class: `node-group role-${node.role} domain-${node.domainIndex} ${extraClass}`.trim(),
     tabindex: focusable ? 0 : -1,
     role: 'button',
-    'aria-label': node.title[language],
+    'aria-label': localized(node.title, language),
   });
   group.dataset.nodeId = node.id;
   group.style.setProperty('--domain-color', node.color);
@@ -440,40 +446,34 @@ function radiusForRole(role) {
 
 function renderChrome() {
   document.documentElement.lang = language;
-  document.title = `${pack.title[language]} — Codex Atlas`;
-  must('brand-title').textContent = pack.title[language];
+  document.title = `${localized(pack.title, language)} — Codex Atlas`;
+  must('brand-title').textContent = localized(pack.title, language);
   must('brand-kicker').textContent = `CODEX ATLAS / ${pack.id.replaceAll('-', ' ').toUpperCase()}`;
-  must('map-subtitle').textContent = pack.subtitle[language];
-  must('mode-kicker').textContent = mode === 'learn'
-    ? (language === 'it' ? 'LIBRERIA DI APPRENDIMENTO' : 'LEARNING LIBRARY')
-    : (language === 'it' ? 'MAPPA INTERATTIVA' : 'INTERACTIVE MAP');
-  must('map-hint').textContent = language === 'it'
-    ? 'Passa sui nodi per l’anteprima · clicca macro-aree, sistemi o concetti · trascina e usa la rotella per esplorare'
-    : 'Hover nodes to preview · open macro areas, systems or concepts · drag and use the wheel to explore';
-  searchInput.placeholder = language === 'it' ? 'Cerca per concetto o significato…' : 'Search by concept or meaning…';
-  languageToggle.textContent = language === 'it' ? 'EN' : 'IT';
-  languageToggle.setAttribute('aria-label', language === 'it' ? 'Passa all’inglese' : 'Switch to Italian');
-  languageToggle.setAttribute('title', language === 'it' ? 'English' : 'Italiano');
+  must('map-subtitle').textContent = localized(pack.subtitle, language);
+  must('mode-kicker').textContent = t(mode === 'learn' ? 'learningLibrary' : 'interactiveMap', language);
+  must('map-hint').textContent = t('mapHint', language);
+  searchInput.placeholder = t('searchPlaceholder', language);
+  languageSwitch.setAttribute('aria-label', t('languageGroup', language));
+  languageSwitch.querySelectorAll('[data-lang]').forEach((button) => {
+    const active = button.dataset.lang === language;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
   renderThemeControl();
-  svg.setAttribute('aria-label', pack.title[language]);
-  must('svg-desc').textContent = pack.subtitle[language];
-  must('reset-view').textContent = language === 'it' ? 'Reimposta' : 'Reset view';
+  svg.setAttribute('aria-label', localized(pack.title, language));
+  must('svg-desc').textContent = localized(pack.subtitle, language);
+  must('reset-view').textContent = t('resetView', language);
 
   document.querySelectorAll('.mode-button').forEach((button) => {
     const active = button.dataset.mode === mode;
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    if (button.dataset.mode === 'explore') button.textContent = language === 'it' ? 'Esplora' : 'Explore';
-    else button.textContent = language === 'it' ? 'Impara' : 'Learn';
+    button.textContent = t(button.dataset.mode === 'explore' ? 'explore' : 'learn', language);
   });
 
-  must('about-title').textContent = language === 'it' ? 'Come leggere il Codex' : 'How to read the Codex';
-  must('about-copy').textContent = language === 'it'
-    ? 'Dal centro partono grandi famiglie colorate che si ramificano in sistemi e concetti sempre più specifici. Le macro-aree restano come callout esterni separati, mentre Esplora e Impara usano la stessa mappa in modi diversi.'
-    : 'Colored families radiate from the center and branch into systems and increasingly specific concepts. Macro areas remain as detached outer callouts, while Explore and Learn use the same map in different ways.';
-  must('about-fine').textContent = pack.resourceNote?.[language] || (language === 'it'
-    ? 'Le sintesi sono a scopo didattico. Gli estratti Wikipedia vengono caricati al passaggio del mouse quando disponibili.'
-    : 'Summaries are educational. Wikipedia excerpts load on hover when available.');
+  must('about-title').textContent = t('aboutTitle', language);
+  must('about-copy').textContent = t('aboutCopy', language);
+  must('about-fine').textContent = localized(pack.resourceNote, language, t('aboutFine', language));
 
   if (selectedId && nodeById.has(selectedId)) renderDrawer(nodeById.get(selectedId));
   renderSearchResults(searchInput.value);
@@ -488,11 +488,19 @@ function bindUi() {
     });
   });
 
-  languageToggle.addEventListener('click', () => {
-    language = language === 'en' ? 'it' : 'en';
-    hideHover();
-    renderAll();
-    syncUrl();
+  languageSwitch.querySelectorAll('[data-lang]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const nextLanguage = normalizeLanguage(button.dataset.lang, language);
+      if (nextLanguage === language) return;
+      language = nextLanguage;
+      hideHover();
+      if (language === 'es') {
+        await hydrateWikipediaTitlesForPack(pack, 'es');
+        rebuildSearchIndex();
+      }
+      renderAll();
+      syncUrl();
+    });
   });
 
   themeToggle.addEventListener('click', () => {
@@ -554,9 +562,7 @@ function renderThemeControl() {
   if (!themeToggle) return;
   const isDark = theme === 'dark';
   themeToggle.textContent = isDark ? '☼' : '☾';
-  const label = language === 'it'
-    ? (isDark ? 'Passa alla modalità chiara' : 'Passa alla modalità scura')
-    : (isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  const label = t(isDark ? 'switchThemeLight' : 'switchThemeDark', language);
   themeToggle.setAttribute('aria-label', label);
   themeToggle.setAttribute('title', label);
   themeToggle.setAttribute('aria-pressed', isDark ? 'false' : 'true');
@@ -575,22 +581,22 @@ function showHover(node) {
   const isStudy = Boolean(isConcept && node.study);
   const studyFormula = isStudy ? node.study.formulas?.[0]?.tex : '';
   const statusLabel = isStudy
-    ? (node.study.source?.[lang] || (lang === 'it' ? 'NOTE DEL CORSO' : 'COURSE NOTES'))
-    : (resourceCount ? `${resourceCount} ${lang === 'it' ? 'RISORSE' : 'RESOURCES'}` : (isConcept ? 'WIKIPEDIA' : 'CODEX'));
+    ? (localized(node.study.source, lang, t('courseNotes', lang)))
+    : (resourceCount ? `${resourceCount} ${t('resourcesUpper', lang)}` : (isConcept ? 'WIKIPEDIA' : 'CODEX'));
 
   hoverContent.innerHTML = `
     <div class="hover-head"><span>${roleLabel(node.role, lang)}</span><span>${escapeHtml(statusLabel)}</span></div>
-    <h3>${escapeHtml(node.title[lang])}</h3>
+    <h3>${escapeHtml(localized(node.title, lang))}</h3>
     ${badges ? `<div class="practical-badges compact">${badges}</div>` : ''}
     <div class="hover-copy-wrap ${isConcept && !isStudy ? 'is-loading' : ''}" id="hover-copy-wrap">
       <p id="hover-copy">${isStudy
-        ? escapeHtml(node.study.summary?.[lang] || node.description?.[lang] || '')
+        ? escapeHtml(localized(node.study.summary, lang, localized(node.description, lang)))
         : (isConcept
-          ? escapeHtml(lang === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…')
-          : escapeHtml(node.description[lang]))}</p>
+          ? escapeHtml(t('wikiLoading', lang))
+          : escapeHtml(localized(node.description, lang)))}</p>
       ${studyFormula ? `<div class="hover-math">\\[${escapeHtml(studyFormula)}\\]</div>` : ''}
     </div>
-    <div class="hover-foot"><span id="hover-status">${isStudy ? escapeHtml(lang === 'it' ? 'Sintesi dai notebook' : 'Summary from notebooks') : (isConcept ? 'Wikipedia' : roleLabel(node.role, lang))}</span>${wikiUrl ? `<a id="hover-wiki" href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
+    <div class="hover-foot"><span id="hover-status">${isStudy ? escapeHtml(t('summaryFromNotebooks', lang)) : (isConcept ? 'Wikipedia' : roleLabel(node.role, lang))}</span>${wikiUrl ? `<a id="hover-wiki" href="${wikiUrl}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ''}</div>
   `;
   hoverCard.classList.add('open');
   hoverCard.setAttribute('aria-hidden', 'false');
@@ -613,12 +619,10 @@ async function hydrateHover(node, version, lang) {
   const link = hoverCard.querySelector('#hover-wiki');
   if (wrap) wrap.classList.remove('is-loading');
   if (result?.extract && copy) copy.textContent = result.extract;
-  else if (copy) copy.textContent = lang === 'it'
-    ? 'Wikipedia non ha restituito un’introduzione per questa voce. Apri l’articolo completo o usa le risorse collegate.'
-    : 'Wikipedia did not return an introduction for this entry. Open the full article or use the linked resources.';
+  else if (copy) copy.textContent = t('wikiUnavailableHover', lang);
   if (status) status.textContent = result?.extract
-    ? `Wikipedia ${result.lang.toUpperCase()} · CC BY-SA`
-    : (lang === 'it' ? 'Estratto non disponibile' : 'Excerpt unavailable');
+    ? `Wikipedia ${result.lang.toUpperCase()} · ${result.fallback ? t('wikiFallback', lang) : 'CC BY-SA'}`
+    : t('excerptUnavailable', lang);
   if (result?.url && link) link.href = result.url;
   positionHover();
 }
@@ -674,16 +678,16 @@ function renderDrawer(node) {
   const resources = renderResourceCards(node, language);
   const isConcept = node.role === 'concept';
   const isStudy = Boolean(isConcept && node.study);
-  const introLabel = language === 'it' ? 'In breve · Wikipedia' : 'Overview · Wikipedia';
-  const detailLabel = language === 'it' ? 'Dettagli pratici' : 'Practical details';
+  const introLabel = t('overviewWikipedia', language);
+  const detailLabel = t('practicalDetails', language);
   const conceptBody = isStudy
     ? renderStudyLesson(node, language)
     : (isConcept ? `
       <section class="wiki-intro-card is-loading" id="wiki-intro-card">
         <div class="section-kicker"><span class="wiki-dot">W</span><span>${introLabel}</span></div>
-        <p class="drawer-copy" id="drawer-copy">${language === 'it' ? 'Caricamento dell’introduzione da Wikipedia…' : 'Loading the Wikipedia introduction…'}</p>
+        <p class="drawer-copy" id="drawer-copy">${escapeHtml(t('wikiLoading', language))}</p>
       </section>
-    ` : `<p class="drawer-copy">${escapeHtml(node.description[language])}</p>`);
+    ` : `<p class="drawer-copy">${escapeHtml(localized(node.description, language))}</p>`);
 
   const hierarchy = !isConcept
     ? (mode === 'learn' ? renderLearnFolder(node) : renderExploreHierarchy(node))
@@ -691,9 +695,9 @@ function renderDrawer(node) {
   const learnConceptNav = mode === 'learn' && isConcept ? renderLearnConceptNav(node) : '';
 
   drawerContent.innerHTML = `
-    <p class="eyebrow">${mode === 'learn' ? (language === 'it' ? 'IMPARA · CARTELLE' : 'LEARN · FOLDERS') : roleLabel(node.role, language)}</p>
-    <nav class="breadcrumbs">${mode === 'learn' ? `<button data-learn-root>${escapeHtml(pack.title[language])}</button><span>›</span>` : ''}${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(entry.title[language])}</button>`).join('<span>›</span>')}</nav>
-    <h2>${escapeHtml(node.title[language])}</h2>
+    <p class="eyebrow">${mode === 'learn' ? t('learnFolders', language) : roleLabel(node.role, language)}</p>
+    <nav class="breadcrumbs">${mode === 'learn' ? `<button data-learn-root>${escapeHtml(localized(pack.title, language))}</button><span>›</span>` : ''}${path.map((entry) => `<button data-node="${entry.id}">${escapeHtml(localized(entry.title, language))}</button>`).join('<span>›</span>')}</nav>
+    <h2>${escapeHtml(localized(node.title, language))}</h2>
     ${badges ? `<div class="practical-badges">${badges}</div>` : ''}
     ${conceptBody}
     ${hierarchy}
@@ -701,7 +705,7 @@ function renderDrawer(node) {
     ${isStudy ? '' : safety}
     ${learnConceptNav}
     ${isStudy ? '' : resources}
-    ${wikiUrl ? `<a class="wiki-link" id="drawer-wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${language === 'it' ? 'Apri l’articolo completo' : 'Open full article'}</span><b>↗</b></a>` : ''}
+    ${wikiUrl ? `<a class="wiki-link" id="drawer-wiki-link" href="${wikiUrl}" target="_blank" rel="noreferrer"><span>W</span><span><small>WIKIPEDIA</small>${escapeHtml(t('openFullArticle', language))}</span><b>↗</b></a>` : ''}
   `;
   openDrawerShell();
   bindDrawerNavigation();
@@ -723,10 +727,8 @@ function renderExploreHierarchy(node) {
   const direct = childrenOf(node);
   const leaves = descendantConcepts(node);
   if (!direct.length) return '';
-  const heading = language === 'it' ? 'Contenuti' : 'Contents';
-  const summary = language === 'it'
-    ? `${direct.length} ${node.role === 'domain' ? 'sotto-argomenti' : 'elementi'} · ${leaves.length} concetti`
-    : `${direct.length} ${node.role === 'domain' ? 'subtopics' : 'items'} · ${leaves.length} concepts`;
+  const heading = t('contents', language);
+  const summary = `${direct.length} ${t(node.role === 'domain' ? 'subtopics' : 'items', language)} · ${leaves.length} ${t('concepts', language)}`;
 
   if (node.role === 'system') {
     return `
@@ -745,7 +747,7 @@ function renderExploreHierarchy(node) {
           <article class="hierarchy-group">
             <button class="hierarchy-system" data-node="${system.id}">
               <span class="hierarchy-system-mark"></span>
-              <span><strong>${escapeHtml(system.title[language])}</strong><small>${concepts.length} ${language === 'it' ? 'concetti' : 'concepts'}</small></span>
+              <span><strong>${escapeHtml(localized(system.title, language))}</strong><small>${concepts.length} ${t('concepts', language)}</small></span>
               <b>›</b>
             </button>
             <div class="hierarchy-concepts">${concepts.map((concept) => hierarchyLeafButton(concept)).join('')}</div>
@@ -755,18 +757,16 @@ function renderExploreHierarchy(node) {
 }
 
 function hierarchyLeafButton(concept) {
-  return `<button class="hierarchy-leaf" data-node="${concept.id}"><span></span><strong>${escapeHtml(concept.title[language])}</strong><b>↗</b></button>`;
+  return `<button class="hierarchy-leaf" data-node="${concept.id}"><span></span><strong>${escapeHtml(localized(concept.title, language))}</strong><b>↗</b></button>`;
 }
 
 function renderLearnRoot() {
   selectedId = '';
   hideHover();
   drawerContent.innerHTML = `
-    <p class="eyebrow">${language === 'it' ? 'IMPARA · LIBRERIA' : 'LEARN · LIBRARY'}</p>
-    <h2>${escapeHtml(pack.title[language])}</h2>
-    <p class="drawer-copy">${language === 'it'
-      ? 'Scegli una macro-area, entra nelle sottocartelle e apri il concetto che vuoi studiare. La mappa rimane disponibile sullo sfondo.'
-      : 'Choose a macro area, open its subfolders, and pick the concept you want to study. The radial map stays available in the background.'}</p>
+    <p class="eyebrow">${t('learnLibrary', language)}</p>
+    <h2>${escapeHtml(localized(pack.title, language))}</h2>
+    <p class="drawer-copy">${escapeHtml(t('learnRootCopy', language))}</p>
     ${renderLearnFolderGrid(childrenByParent.get('__root__') ?? [])}
   `;
   openDrawerShell();
@@ -778,12 +778,10 @@ function renderLearnRoot() {
 function renderLearnFolder(node) {
   const children = childrenOf(node);
   const leafCount = descendantConcepts(node).length;
-  const label = node.role === 'domain'
-    ? (language === 'it' ? 'Sottocartelle' : 'Subfolders')
-    : (language === 'it' ? 'Lezioni' : 'Lessons');
+  const label = t(node.role === 'domain' ? 'subfolders' : 'lessons', language);
   return `
     <section class="learn-library-section">
-      <div class="hierarchy-heading"><span>${label}</span><small>${leafCount} ${language === 'it' ? 'concetti' : 'concepts'}</small></div>
+      <div class="hierarchy-heading"><span>${label}</span><small>${leafCount} ${t('concepts', language)}</small></div>
       ${renderLearnFolderGrid(children)}
     </section>`;
 }
@@ -794,14 +792,14 @@ function renderLearnFolderGrid(nodes) {
     const isFolder = child.role !== 'concept';
     const count = isFolder ? descendantConcepts(child).length : 1;
     const meta = child.role === 'domain'
-      ? `${childrenOf(child).length} ${language === 'it' ? 'cartelle' : 'folders'} · ${count} ${language === 'it' ? 'concetti' : 'concepts'}`
+      ? `${childrenOf(child).length} ${t('folders', language)} · ${count} ${t('concepts', language)}`
       : child.role === 'system'
-        ? `${count} ${language === 'it' ? 'lezioni' : 'lessons'}`
-        : (language === 'it' ? 'Apri la lezione' : 'Open lesson');
+        ? `${count} ${t('lessons', language).toLocaleLowerCase(language)}`
+        : t('openLesson', language);
     return `
       <button class="learn-folder ${isFolder ? 'is-folder' : 'is-lesson'}" data-node="${child.id}">
         <span class="folder-icon" aria-hidden="true"></span>
-        <span class="folder-copy"><strong>${escapeHtml(child.title[language])}</strong><small>${escapeHtml(meta)}</small></span>
+        <span class="folder-copy"><strong>${escapeHtml(localized(child.title, language))}</strong><small>${escapeHtml(meta)}</small></span>
         <b>›</b>
       </button>`;
   }).join('')}</div>`;
@@ -816,10 +814,10 @@ function renderLearnConceptNav(node) {
   const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
   return `
     <section class="learn-concept-nav">
-      <button class="learn-back-folder" data-node="${parent.id}"><span class="folder-icon" aria-hidden="true"></span><span><small>${language === 'it' ? 'Torna alla cartella' : 'Back to folder'}</small><strong>${escapeHtml(parent.title[language])}</strong></span></button>
+      <button class="learn-back-folder" data-node="${parent.id}"><span class="folder-icon" aria-hidden="true"></span><span><small>${t('backToFolder', language)}</small><strong>${escapeHtml(localized(parent.title, language))}</strong></span></button>
       <div class="learn-sibling-nav">
-        ${previous ? `<button data-node="${previous.id}">← ${escapeHtml(previous.title[language])}</button>` : '<span></span>'}
-        ${next ? `<button data-node="${next.id}">${escapeHtml(next.title[language])} →</button>` : '<span></span>'}
+        ${previous ? `<button data-node="${previous.id}">← ${escapeHtml(localized(previous.title, language))}</button>` : '<span></span>'}
+        ${next ? `<button data-node="${next.id}">${escapeHtml(localized(next.title, language))} →</button>` : '<span></span>'}
       </div>
     </section>`;
 }
@@ -842,8 +840,8 @@ function renderStudyLesson(node, lang) {
   const formulas = study.formulas || [];
   const terms = study.terms || [];
   const example = study.example;
-  const summary = study.summary?.[lang] || node.description?.[lang] || '';
-  const source = study.source?.[lang] || (lang === 'it' ? 'Notebook del corso' : 'Course notebook');
+  const summary = localized(study.summary, lang, localized(node.description, lang));
+  const source = localized(study.source, lang, t('courseNotebook', lang));
 
   return `
     <section class="study-intro-card">
@@ -852,29 +850,29 @@ function renderStudyLesson(node, lang) {
     </section>
     ${formulas.length ? `
       <section class="study-section">
-        <p class="study-heading">${lang === 'it' ? 'Formula' : 'Formula'}</p>
+        <p class="study-heading">${t('formula', lang)}</p>
         <div class="formula-grid">${formulas.map((item) => `
           <article class="formula-card">
-            <small>${escapeHtml(item.title?.[lang] || (lang === 'it' ? 'Formula' : 'Formula'))}</small>
+            <small>${escapeHtml(localized(item.title, lang, t('formula', lang)))}</small>
             <div class="math-display">\\[${escapeHtml(item.tex)}\\]</div>
           </article>
         `).join('')}</div>
       </section>` : ''}
     ${terms.length ? `
       <section class="study-section">
-        <p class="study-heading">${lang === 'it' ? 'Significato dei termini' : 'Meaning of the terms'}</p>
+        <p class="study-heading">${t('meaningTerms', lang)}</p>
         <div class="term-list">${terms.map((item) => `
-          <div class="term-row"><span class="term-symbol">\\(${escapeHtml(item.symbol)}\\)</span><span>${escapeHtml(item.label?.[lang] || '')}</span></div>
+          <div class="term-row"><span class="term-symbol">\\(${escapeHtml(item.symbol)}\\)</span><span>${escapeHtml(localized(item.label, lang))}</span></div>
         `).join('')}</div>
       </section>` : ''}
     ${example ? `
       <section class="study-section example-section">
-        <p class="study-heading">${escapeHtml(example.title?.[lang] || (lang === 'it' ? 'Esempio' : 'Example'))}</p>
-        <p class="study-example-copy">${escapeHtml(example.body?.[lang] || '')}</p>
+        <p class="study-heading">${escapeHtml(localized(example.title, lang, t('example', lang)))}</p>
+        <p class="study-example-copy">${escapeHtml(localized(example.body, lang))}</p>
         ${example.tex ? `<div class="example-math">\\[${escapeHtml(example.tex)}\\]</div>` : ''}
       </section>` : ''}
-    ${study.note?.[lang] ? `
-      <section class="study-note"><strong>${lang === 'it' ? 'Nota' : 'Note'}</strong><p>${escapeHtml(study.note[lang])}</p></section>` : ''}
+    ${localized(study.note, lang) ? `
+      <section class="study-note"><strong>${t('note', lang)}</strong><p>${escapeHtml(localized(study.note, lang))}</p></section>` : ''}
   `;
 }
 
@@ -887,10 +885,12 @@ async function hydrateDrawer(node, lang) {
   const link = document.getElementById('drawer-wiki-link');
   if (card) card.classList.remove('is-loading');
   if (result?.extract && copy) copy.textContent = result.extract;
-  else if (copy) copy.textContent = lang === 'it'
-    ? 'Wikipedia non ha restituito un’introduzione per questa voce. Puoi aprire l’articolo completo oppure consultare le risorse pratiche qui sotto.'
-    : 'Wikipedia did not return an introduction for this entry. You can open the full article or use the practical resources below.';
-  if (result?.url && link) link.href = result.url;
+  else if (copy) copy.textContent = t('wikiUnavailableDrawer', lang);
+  if (result?.url && link) {
+    link.href = result.url;
+    const small = link.querySelector('small');
+    if (small && result.fallback) small.textContent = `WIKIPEDIA ${result.lang.toUpperCase()} · ${t('wikiFallback', lang).toUpperCase()}`;
+  }
 }
 
 function closeDrawer() {
@@ -945,8 +945,8 @@ function renderSearchResults(query) {
     language,
     limit: 12,
   });
-  const semanticLabel = language === 'it' ? 'semantico' : 'semantic';
-  const allCodexLabel = language === 'it' ? 'Ricerca semantica · tutti i Codex' : 'Semantic search · all Codex';
+  const semanticLabel = t('semantic', language);
+  const allCodexLabel = t('semanticAll', language);
 
   searchResults.innerHTML = matches.length
     ? `<div class="search-mode-note"><span>✦</span>${escapeHtml(allCodexLabel)}</div>${matches.map((result) => {
@@ -956,7 +956,7 @@ function renderSearchResults(query) {
         const otherPack = result.packId !== pack.id ? ' search-result-cross-pack' : '';
         return `<button class="search-result${otherPack}" data-search-pack="${escapeHtml(result.packId)}" data-search-node="${escapeHtml(result.node.id)}"><span><strong>${escapeHtml(result.title)}</strong><small><b>${escapeHtml(result.packTitle)}</b> · ${escapeHtml(path)}${escapeHtml(role)} ${semantic}</small></span><i>${result.packId === pack.id ? '↗' : '→'}</i></button>`;
       }).join('')}`
-    : `<p>${language === 'it' ? 'Nessun risultato semantico.' : 'No semantic results.'}</p>`;
+    : `<p>${t('noSemanticResults', language)}</p>`;
 
   searchResults.querySelectorAll('[data-search-node]').forEach((button) => button.addEventListener('click', () => {
     const targetPack = button.dataset.searchPack;
@@ -983,17 +983,17 @@ function practicalBadges(node, lang) {
   const items = [];
   if (node.difficulty) {
     const label = {
-      easy: lang === 'it' ? 'DIY semplice' : 'Simple DIY',
-      moderate: lang === 'it' ? 'Intermedio' : 'Intermediate',
-      pro: lang === 'it' ? 'Tecnico' : 'Professional',
+      easy: t('simpleDIY', lang),
+      moderate: t('intermediate', lang),
+      pro: t('professional', lang),
     }[node.difficulty] || node.difficulty;
     items.push(`<span class="practical-badge difficulty-${escapeHtml(node.difficulty)}">${escapeHtml(label)}</span>`);
   }
   if (node.risk) {
     const label = {
-      low: lang === 'it' ? 'Rischio basso' : 'Low risk',
-      medium: lang === 'it' ? 'Attenzione' : 'Caution',
-      high: lang === 'it' ? 'Rischio alto' : 'High risk',
+      low: t('lowRisk', lang),
+      medium: t('caution', lang),
+      high: t('highRisk', lang),
     }[node.risk] || node.risk;
     items.push(`<span class="practical-badge risk-${escapeHtml(node.risk)}">${escapeHtml(label)}</span>`);
   }
@@ -1003,34 +1003,26 @@ function practicalBadges(node, lang) {
 function practicalSafetyCard(node, lang) {
   if (!node.risk || node.role !== 'concept') return '';
   const copy = {
-    low: lang === 'it'
-      ? 'In genere adatto a controlli o manutenzione leggera. Segui il manuale del componente e isola acqua o alimentazione quando pertinente.'
-      : 'Generally suitable for inspection or light maintenance. Follow the component manual and isolate water or power when relevant.',
-    medium: lang === 'it'
-      ? 'Richiede attenzione: se devi aprire impianti, lavorare in quota o non riesci a isolare in sicurezza la fonte, fermati e chiama un professionista.'
-      : 'Use caution: if the job requires opening building systems, working at height, or you cannot safely isolate the source, stop and call a professional.',
-    high: lang === 'it'
-      ? 'Non trattarlo come una procedura fai da te. Usa questa scheda per capire il sistema e riconoscere i segnali; l’intervento va affidato a un tecnico qualificato.'
-      : 'Do not treat this as a DIY procedure. Use this card to understand the system and recognize warning signs; hands-on work belongs with a qualified professional.',
+    low: t('safetyLow', lang),
+    medium: t('safetyMedium', lang),
+    high: t('safetyHigh', lang),
   }[node.risk];
   if (!copy) return '';
-  const title = node.risk === 'high'
-    ? (lang === 'it' ? 'Quando chiamare un professionista' : 'When to call a professional')
-    : (lang === 'it' ? 'Nota pratica' : 'Practical note');
+  const title = node.risk === 'high' ? t('callProfessional', lang) : t('practicalNote', lang);
   return `<section class="safety-card risk-${escapeHtml(node.risk)}"><strong>${escapeHtml(title)}</strong><p>${escapeHtml(copy)}</p></section>`;
 }
 
 function renderResourceCards(node, lang) {
   const resources = node.resources || [];
   if (!resources.length) return '';
-  const title = lang === 'it' ? 'Risorse pratiche' : 'Practical resources';
+  const title = t('practicalResources', lang);
   return `<section class="resource-section"><p class="resource-heading">${title}</p><div class="resource-grid">${resources.map((resource) => {
-    const label = resource.title?.[lang] || resource.title?.en || resource.source || resource.url;
+    const label = localized(resource.title, lang, resource.source || resource.url);
     const type = {
-      official: lang === 'it' ? 'FONTE UFFICIALE' : 'OFFICIAL',
-      safety: lang === 'it' ? 'SICUREZZA' : 'SAFETY',
+      official: t('officialSource', lang),
+      safety: t('safety', lang),
       tutorial: 'TUTORIAL',
-      manual: lang === 'it' ? 'MANUALE' : 'MANUAL',
+      manual: t('manual', lang),
     }[resource.type] || 'LINK';
     const icon = { official: '◎', safety: '!', tutorial: '↗', manual: '▤' }[resource.type] || '↗';
     return `<a class="resource-link resource-${escapeHtml(resource.type || 'link')}" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer"><span>${icon}</span><span><small>${type}${resource.source ? ` · ${escapeHtml(resource.source)}` : ''}</small>${escapeHtml(label)}</span><b>↗</b></a>`;
@@ -1050,12 +1042,7 @@ function nodePath(node) {
 }
 
 function roleLabel(role, lang) {
-  const labels = {
-    domain: { en: 'Macro area', it: 'Macro-area' },
-    system: { en: 'System', it: 'Sistema' },
-    concept: { en: 'Concept', it: 'Concetto' },
-  };
-  return labels[role][lang];
+  return t({ domain: 'roleDomain', system: 'roleSystem', concept: 'roleConcept' }[role] || 'roleConcept', lang);
 }
 
 function wrapWords(value, max) {

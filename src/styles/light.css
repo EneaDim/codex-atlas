@@ -290,3 +290,7 @@
 :root[data-theme="light"] .learn-sibling-nav button:hover { background: rgba(var(--accent-rgb), .07); }
 :root[data-theme="light"] .folder-icon { background: rgba(var(--accent-rgb), .08); }
 :root[data-theme="light"] .learn-folder::after { opacity: .55; }
+
+html[data-theme="light"] .language-switch { background: rgba(22,32,44,.035); }
+html[data-theme="light"] .language-switch button:hover { background: rgba(22,32,44,.055); }
+html[data-theme="light"] .language-switch button.active { color: var(--ink); background: rgba(var(--accent-rgb), .13); }

@@ -6,6 +6,7 @@ This document explains how Codex Atlas is organized and where each responsibilit
 
 | Pack | Site |
 | --- | --- |
+| **Main Atlas hub** | https://codex-atlas.up.railway.app |
 | `human-body` | https://codex-human-body.up.railway.app |
 | `finance` | https://codex-finance.up.railway.app |
 | `home` | https://codex-home.up.railway.app |
@@ -26,6 +27,7 @@ Human Body, Finance, Home, Statistics, Climate, Survival and Nutrition share the
 codex-atlas/
 ├── README.md
 ├── index.html
+├── hub.html
 ├── package.json
 ├── server.mjs
 ├── railway.json
@@ -58,6 +60,7 @@ codex-atlas/
 │
 └── src/
     ├── main.js
+    ├── hub.js
     ├── core/
     │   ├── app.js
     │   ├── constants.js
@@ -80,7 +83,8 @@ codex-atlas/
     └── styles/
         ├── main.css
         ├── base.css
-        └── light.css
+        ├── light.css
+        └── hub.css
 ```
 
 
@@ -95,27 +99,32 @@ current implementation.
 
 `npm run audit` enforces this rule and fails if TypeScript source reappears under `src/`.
 
+
+## Main Atlas hub
+
+`CODEX_PACK=atlas` is a special deployment target for the public Codex Atlas landing page. It does not duplicate a content pack. The server serves `hub.html`, which loads `src/hub.js` and `src/styles/hub.css`.
+
+The hub presents the seven registered packs as destinations, preserves IT/EN/ES and dark/light preferences, and reuses the shared semantic-search index to jump directly to a concept in any Codex. Individual content sites continue to use `index.html` and the normal radial renderer.
+
 ## Runtime flow
 
 ```text
 Browser request
     ↓
 server.mjs
-    ├─ serves static files
-    └─ creates /runtime-config.js from CODEX_PACK
-             ↓
-          index.html
-             ↓
-          src/main.js
-             ↓
-        src/core/app.js
-             ├─ src/packs/registry.js
-             ├─ src/core/layout.js
-             ├─ src/core/viewport.js
-             ├─ src/core/math.js
-             ├─ src/core/search.js
-             ├─ src/core/wikipedia.js
-             └─ src/styles/main.css
+    ├─ CODEX_PACK=atlas → hub.html → src/hub.js
+    │                         ├─ src/core/search.js
+    │                         └─ src/packs/registry.js
+    │
+    └─ CODEX_PACK=<content pack> → index.html → src/main.js
+                                      ↓
+                                  src/core/app.js
+                                      ├─ src/packs/registry.js
+                                      ├─ src/core/layout.js
+                                      ├─ src/core/viewport.js
+                                      ├─ src/core/math.js
+                                      ├─ src/core/search.js
+                                      └─ src/core/wikipedia.js
 ```
 
 ## Root files
@@ -126,7 +135,11 @@ Short public-facing introduction to the project, live sites and local setup. Imp
 
 ### `index.html`
 
-Minimal browser shell. It loads the runtime configuration, CSS and browser entry point.
+Minimal browser shell for individual Codex maps. It loads the runtime configuration, CSS and browser entry point.
+
+### `hub.html`
+
+Browser shell for the main Codex Atlas landing page when `CODEX_PACK=atlas`. It loads the dedicated hub entry point without pretending that the hub is a content pack.
 
 ### `server.mjs`
 
@@ -137,6 +150,7 @@ Small Node HTTP server. It reads `PORT` and `CODEX_PACK`, generates `/runtime-co
 Project metadata and local scripts:
 
 ```bash
+npm run dev:atlas
 npm run dev:human-body
 npm run dev:finance
 npm run dev:home
@@ -171,6 +185,14 @@ Reusable DOM and SVG helpers.
 
 Transforms pack data into the radial hierarchy, calculates positions and validates content IDs.
 
+### `i18n.js`
+
+Shared IT/EN/ES interface copy, language normalization and localized-value helpers.
+
+### `spanish.js`
+
+Spanish pack metadata, structural labels, Statistics-course translations and offline fallbacks used before/when Wikipedia language-link resolution is unavailable.
+
 ### `math.js`
 
 Loads MathJax-backed typesetting for lesson formulas and examples. If the external renderer is unavailable, the UI falls back to readable TeX text.
@@ -185,7 +207,7 @@ Camera and gesture behavior: drag, wheel/trackpad zoom, one-finger pan and two-f
 
 ### `wikipedia.js`
 
-Loads and caches Wikipedia introductory extracts, including language fallback behavior.
+Loads and caches Wikipedia introductory extracts. It first tries the selected language, resolves the canonical local article through MediaWiki language links when necessary, and only then falls back to English. It also batch-resolves Spanish concept titles for the active pack.
 
 ## `src/packs/`
 
@@ -211,9 +233,10 @@ Repository quality tooling. `validate.mjs` checks pack IDs, localized titles, du
 
 Shared visual system.
 
-- `main.css` — CSS entry point.
+- `main.css` — shared CSS entry point.
 - `base.css` — dark theme, components and responsive/mobile behavior.
 - `light.css` — light-mode overrides.
+- `hub.css` — landing-page layout, radial destination cards and mobile hub presentation.
 
 ## `public/images/`
 
@@ -232,7 +255,8 @@ public/images/<pack-id>/center.<ext>
 | Change pan/zoom/touch | `src/core/viewport.js` |
 | Change Wikipedia loading | `src/core/wikipedia.js` |
 | Change semantic search | `src/core/search.js`, concept `aliases` / `searchTerms` |
-| Change UI behavior | `src/core/app.js` |
+| Change Codex UI behavior | `src/core/app.js` |
+| Change main hub | `hub.html`, `src/hub.js`, `src/styles/hub.css` |
 | Change appearance | `src/styles/` |
 | Change server/runtime pack selection | `server.mjs`, `src/packs/registry.js` |
 | Change Railway deployment | Railway config + `docs/RAILWAY_CLI.md` |

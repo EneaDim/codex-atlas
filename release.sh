@@ -62,8 +62,8 @@ Examples:
   ./release.sh climate survival nutrition
   ./release.sh all
 
-The Railway service name is the pack id.
-The requested Railway domain is codex-<pack>.up.railway.app.
+The Railway service name is the pack id; the main hub uses service 'atlas'.
+The requested Railway domain is codex-<pack>.up.railway.app (atlas → codex-atlas.up.railway.app).
 EOF
   exit 2
 }
@@ -73,6 +73,7 @@ EOF
 if [[ $# -eq 1 && "$1" == "all" ]]; then
   mapfile -t ALL_PACKS < <(node --input-type=module - <<'NODE'
 import { PACK_IDS } from './src/packs/registry.js';
+console.log('atlas');
 for (const pack of PACK_IDS) console.log(pack);
 NODE
   )
@@ -81,6 +82,7 @@ fi
 
 pack_exists() {
   local pack="$1"
+  [[ "$pack" == "atlas" ]] && return 0
   PACK_TO_CHECK="$pack" node --input-type=module - <<'NODE'
 import { isPackId } from './src/packs/registry.js';
 process.exit(isPackId(process.env.PACK_TO_CHECK) ? 0 : 1);

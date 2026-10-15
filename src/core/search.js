@@ -4,6 +4,7 @@ import { PACKS } from '../packs/registry.js';
 const STOP_WORDS = new Set([
   'a','ad','al','alla','alle','allo','anche','che','chi','come','con','da','dal','dalla','dalle','dallo','dei','del','della','delle','di','e','ed','gli','i','il','in','la','le','lo','ma','nel','nella','nelle','o','per','piu','se','su','tra','un','una','uno',
   'a','an','and','are','as','at','by','for','from','how','in','into','is','of','on','or','the','to','what','when','where','which','with',
+  'a','al','algo','como','con','de','del','desde','donde','el','ella','en','entre','es','esta','este','esto','la','las','lo','los','o','para','por','que','se','sin','sobre','su','sus','un','una','unos','unas','y',
 ]);
 
 const SEMANTIC_CLUSTERS = [
@@ -11,6 +12,7 @@ const SEMANTIC_CLUSTERS = [
     terms: [
       'infiammazione','infiammatorio','infiammatoria','risposta infiammatoria','dieta antinfiammatoria','gonfiore','rossore','ferita gonfia','infezione ferita',
       'inflammation','inflammatory','inflammatory response','anti inflammatory diet','anti-inflammatory diet','swelling','redness','infected wound',
+      'inflamacion','inflamación','inflamatorio','inflamatoria','respuesta inflamatoria','dieta antiinflamatoria','hinchazon','hinchazón','enrojecimiento','herida infectada',
     ],
     targets: {
       'human-body:inflammation': 34,
@@ -24,7 +26,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['ferita','ferite','taglio','abrasione','lacerazione','medicazione','wound','wounds','cut','abrasion','laceration','dressing'],
+    terms: ['ferita','ferite','taglio','abrasione','lacerazione','medicazione','wound','wounds','cut','abrasion','laceration','dressing','herida','heridas','corte','abrasion','abrasión','laceracion','laceración','cura de heridas','vendaje'],
     targets: {
       'survival:wound-care': 30,
       'survival:first-aid': 12,
@@ -33,7 +35,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['disidratazione','sete','mancanza acqua','bere in emergenza','dehydration','thirst','lack of water','emergency drinking water'],
+    terms: ['disidratazione','sete','mancanza acqua','bere in emergenza','dehydration','thirst','lack of water','emergency drinking water','deshidratacion','deshidratación','sed','falta de agua','beber en emergencia'],
     targets: {
       'survival:survival-water': 18,
       'survival:water-disinfection': 12,
@@ -51,7 +53,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['probabilita inversa','aggiornare probabilita','dato un risultato qual e la causa','teorema inverso probabilita','inverse probability','update probability','cause given evidence'],
+    terms: ['probabilita inversa','aggiornare probabilita','dato un risultato qual e la causa','teorema inverso probabilita','inverse probability','update probability','cause given evidence','probabilidad inversa','actualizar probabilidad','causa dada la evidencia','teorema de bayes'],
     targets: {
       'statistics:stat-bayes-formula': 32,
       'statistics:stat-diagnostic-bayes': 18,
@@ -59,7 +61,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['dispersione','variabilita','quanto sono sparsi','scarto dalla media','spread around mean','dispersion','variability','distance from mean'],
+    terms: ['dispersione','variabilita','quanto sono sparsi','scarto dalla media','spread around mean','dispersion','variability','distance from mean','dispersion','dispersión','variabilidad','distancia respecto a la media'],
     targets: {
       'statistics:stat-variance-definition': 30,
       'statistics:stat-standard-deviation': 22,
@@ -67,7 +69,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['soldi perdono valore','perdita potere acquisto','prezzi salgono','carovita','money loses value','purchasing power falls','prices rise','cost of living rises'],
+    terms: ['soldi perdono valore','perdita potere acquisto','prezzi salgono','carovita','money loses value','purchasing power falls','prices rise','cost of living rises','dinero pierde valor','perdida de poder adquisitivo','pérdida de poder adquisitivo','suben los precios','coste de vida'],
     targets: {
       'finance:inflation': 34,
       'finance:macro-cycle': 10,
@@ -88,7 +90,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['aria trattiene calore','gas trattengono calore','riscaldamento atmosfera','heat trapped by atmosphere','gases trap heat','atmosphere warming'],
+    terms: ['aria trattiene calore','gas trattengono calore','riscaldamento atmosfera','heat trapped by atmosphere','gases trap heat','atmosphere warming','aire retiene calor','gases retienen calor','calentamiento de la atmosfera','calentamiento de la atmósfera'],
     targets: {
       'climate:greenhouse-effect': 34,
       'climate:greenhouse-physics': 13,
@@ -104,7 +106,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['mi sono perso','perdersi bosco','ritrovare strada','orientarsi senza gps','lost in woods','find my way','navigate without gps'],
+    terms: ['mi sono perso','perdersi bosco','ritrovare strada','orientarsi senza gps','lost in woods','find my way','navigate without gps','me he perdido','perderse en el bosque','encontrar el camino','orientarse sin gps'],
     targets: {
       'survival:survival-navigation': 24,
       'survival:map-compass': 18,
@@ -120,7 +122,7 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['mal di pancia dopo mangiato','cibo contaminato','intossicazione alimentare','food poisoning','sick after eating','contaminated food'],
+    terms: ['mal di pancia dopo mangiato','cibo contaminato','intossicazione alimentare','food poisoning','sick after eating','contaminated food','dolor de barriga despues de comer','alimento contaminado','intoxicacion alimentaria','intoxicación alimentaria'],
     targets: {
       'nutrition:foodborne-illness': 30,
       'nutrition:food-safety': 16,
@@ -128,14 +130,14 @@ const SEMANTIC_CLUSTERS = [
     },
   },
   {
-    terms: ['salute intestinale','flora intestinale','batteri intestinali','gut health','gut flora','intestinal bacteria'],
+    terms: ['salute intestinale','flora intestinale','batteri intestinali','gut health','gut flora','intestinal bacteria','salud intestinal','flora intestinal','bacterias intestinales','microbiota intestinal'],
     targets: {
       'nutrition:gut-microbiome': 24,
       'nutrition:dietary-fiber': 12,
     },
   },
   {
-    terms: ['zucchero nel sangue','picco glicemico','glicemia','blood sugar','glucose spike','glycemia'],
+    terms: ['zucchero nel sangue','picco glicemico','glicemia','blood sugar','glucose spike','glycemia','azucar en sangre','azúcar en sangre','pico glucemico','pico glucémico','glucemia'],
     targets: {
       'nutrition:glycemic-index': 24,
       'nutrition:glycemic-load': 18,
@@ -178,7 +180,12 @@ const SEMANTIC_CLUSTERS = [
   },
 ];
 
-const INDEX = buildIndex();
+let INDEX = buildIndex();
+
+export function rebuildSearchIndex() {
+  INDEX = buildIndex();
+  return INDEX;
+}
 
 export function semanticSearch(query, { currentPackId = '', language = 'it', limit = 12 } = {}) {
   const normalizedQuery = normalize(query);
@@ -252,6 +259,7 @@ function buildIndex() {
       const path = {
         en: [domain?.title?.en, parent?.role === 'system' ? parent.title.en : null].filter(Boolean).join(' › '),
         it: [domain?.title?.it, parent?.role === 'system' ? parent.title.it : null].filter(Boolean).join(' › '),
+        es: [domain?.title?.es, parent?.role === 'system' ? parent.title.es : null].filter(Boolean).join(' › '),
       };
 
       docs.push({
@@ -341,14 +349,14 @@ function semanticBoostMap(normalizedQuery, queryTokens) {
 function localizedText(value) {
   if (!value) return '';
   if (typeof value === 'string') return value;
-  return [value.en, value.it].filter(Boolean).join(' ');
+  return [value.en, value.it, value.es].filter(Boolean).join(' ');
 }
 
 function localizedList(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
   if (typeof value === 'string') return [value];
-  return [...(value.en || []), ...(value.it || [])];
+  return [...(value.en || []), ...(value.it || []), ...(value.es || [])];
 }
 
 function tokens(value) {

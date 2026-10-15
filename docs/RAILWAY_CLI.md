@@ -8,6 +8,7 @@ Current production setup:
 
 | Railway service | `CODEX_PACK` | Public site |
 | --- | --- | --- |
+| `atlas` | `atlas` | https://codex-atlas.up.railway.app |
 | `human-body` | `human-body` | https://codex-human-body.up.railway.app |
 | `finance` | `finance` | https://codex-finance.up.railway.app |
 | `home` | `home` | https://codex-home.up.railway.app |

@@ -58,9 +58,11 @@ export function flattenPack(source) {
           description: concept.description || (source.id === 'home' ? {
             en: `${concept.title.en}: understand its role, common warning signs and the safe boundary between routine DIY and professional work within ${system.title.en.toLowerCase()}.`,
             it: `${concept.title.it}: capisci a cosa serve, quali segnali osservare e dove finisce il fai da te sicuro nell’ambito di ${system.title.it.toLowerCase()}.`,
+            es: `${concept.title.es}: comprende su función, las señales de alerta habituales y el límite seguro entre el bricolaje rutinario y el trabajo profesional dentro de ${system.title.es.toLowerCase()}.`,
           } : {
             en: `${concept.title.en} is a key concept within ${system.title.en.toLowerCase()}.`,
             it: `${concept.title.it} è un concetto chiave nell’ambito di ${system.title.it.toLowerCase()}.`,
+            es: `${concept.title.es} es un concepto clave dentro de ${system.title.es.toLowerCase()}.`,
           }),
         });
       });

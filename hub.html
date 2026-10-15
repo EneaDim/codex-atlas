@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      (() => {
+        const lang = new URLSearchParams(location.search).get('lang');
+        if (['it', 'en', 'es'].includes(lang)) document.documentElement.lang = lang;
+        try {
+          const saved = localStorage.getItem('codex-theme');
+          document.documentElement.dataset.theme = saved === 'light' ? 'light' : 'dark';
+        } catch {
+          document.documentElement.dataset.theme = 'dark';
+        }
+        document.documentElement.dataset.codexPack = 'atlas';
+      })();
+    </script>
+    <meta name="theme-color" content="#0b0d11" />
+    <meta name="description" content="Codex Atlas — choose an interactive visual knowledge map." />
+    <title>Codex Atlas</title>
+    <link rel="stylesheet" href="/src/styles/main.css" />
+    <link rel="stylesheet" href="/src/styles/hub.css" />
+  </head>
+  <body>
+    <div id="app">
+      <main class="hub-shell">
+        <header class="hub-topbar">
+          <a class="brand hub-brand" href="/" aria-label="Codex Atlas">
+            <span class="brand-mark">C</span>
+            <span><strong>Codex Atlas</strong><small>KNOWLEDGE MAPS</small></span>
+          </a>
+          <div class="hub-actions">
+            <button class="round-button theme-button" id="theme-toggle" aria-label="Theme">☼</button>
+            <div class="language-switch" id="language-switch" role="group" aria-label="Language">
+              <button data-lang="it">IT</button><button data-lang="en" class="active">EN</button><button data-lang="es">ES</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="hub-stage">
+          <svg class="hub-lines" id="hub-lines" aria-hidden="true"></svg>
+          <div class="hub-center">
+            <span class="hub-center-orbit"></span>
+            <div class="hub-center-mark">C</div>
+            <p class="hub-kicker" id="hub-kicker">KNOWLEDGE ATLAS</p>
+            <h1 id="hub-title">Explore what you want to understand.</h1>
+            <p class="hub-intro" id="hub-intro">Seven interactive maps, one shared system. Choose a domain or search for a concept across the whole Atlas.</p>
+            <label class="hub-search-box">
+              <span>⌕</span>
+              <input id="hub-search" autocomplete="off" spellcheck="false" placeholder="Search across all Codex…" />
+              <kbd>/</kbd>
+            </label>
+            <small class="hub-search-hint" id="hub-search-hint">GLOBAL SEMANTIC SEARCH</small>
+            <div class="hub-search-results" id="hub-search-results" hidden></div>
+          </div>
+
+          <div class="hub-domains" id="hub-domains">
+            <a class="hub-domain-card" data-pack="human-body" data-index="0" href="https://codex-human-body.up.railway.app/" style="--domain-color:#58a9ff">
+              <span class="hub-domain-icon">◎</span><span class="hub-domain-copy"><small>CODEX 01</small><strong>Human Body</strong><span>Anatomy, organs, systems and processes of the human body.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+            <a class="hub-domain-card" data-pack="finance" data-index="1" href="https://codex-finance.up.railway.app/" style="--domain-color:#f0b64e">
+              <span class="hub-domain-icon">↗</span><span class="hub-domain-copy"><small>CODEX 02</small><strong>Finance</strong><span>Markets, economics, investing, risk and personal finance.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+            <a class="hub-domain-card" data-pack="home" data-index="2" href="https://codex-home.up.railway.app/" style="--domain-color:#55d1af">
+              <span class="hub-domain-icon">⌂</span><span class="hub-domain-copy"><small>CODEX 03</small><strong>Home</strong><span>Practical home knowledge: systems, maintenance, tools and safety.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+            <a class="hub-domain-card" data-pack="statistics" data-index="3" href="https://codex-statistics.up.railway.app/" style="--domain-color:#8b7cf6">
+              <span class="hub-domain-icon">Σ</span><span class="hub-domain-copy"><small>CODEX 04</small><strong>Statistics</strong><span>Probability and statistics with formulas, term explanations and examples.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+            <a class="hub-domain-card" data-pack="climate" data-index="4" href="https://codex-climate.up.railway.app/" style="--domain-color:#4fb7ff">
+              <span class="hub-domain-icon">◌</span><span class="hub-domain-copy"><small>CODEX 05</small><strong>Climate</strong><span>Climate system, atmosphere, oceans, feedbacks, impacts and responses.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+            <a class="hub-domain-card" data-pack="survival" data-index="5" href="https://codex-survival.up.railway.app/" style="--domain-color:#ff9f43">
+              <span class="hub-domain-icon">△</span><span class="hub-domain-copy"><small>CODEX 06</small><strong>Survival</strong><span>Priorities, water, shelter, navigation, first aid and preparedness.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+            <a class="hub-domain-card" data-pack="nutrition" data-index="6" href="https://codex-nutrition.up.railway.app/" style="--domain-color:#6fd19a">
+              <span class="hub-domain-icon">◇</span><span class="hub-domain-copy"><small>CODEX 07</small><strong>Nutrition</strong><span>Nutrients, digestion, metabolism, dietary patterns and food safety.</span></span><b>OPEN CODEX ↗</b>
+            </a>
+          </div>
+        </section>
+
+        <footer class="hub-footer" id="hub-footer">ONE RENDERER · SEVEN DOMAINS · SHARED SEARCH</footer>
+      </main>
+    </div>
+    <script src="/runtime-config.js"></script>
+    <script type="module" src="/src/hub.js"></script>
+  </body>
+</html>
